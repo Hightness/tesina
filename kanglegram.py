@@ -41,7 +41,7 @@ class Node:
                     already_seen.add(c.value)  # Aggiunge il valore all'insieme dei valori già visti
         self.children = final_c              # Aggiorna la lista dei figli
 
-# Simplify get_linear_order using list comprehension
+# Semplifica get_linear_order usando la list comprehension
 def get_linear_order(V):
     if isinstance(V, str):
         return [V]
@@ -51,25 +51,25 @@ def get_linear_order(V):
         V = V.children
     return [leaf for c in V for leaf in get_linear_order(c)]
 
-# Function to count crossings on a node
+# Funzione per contare gli incroci su un nodo
 def crossings_on_node(tau_orders, n):
     if n not in tau_orders:
         return 0
     j = tau_orders.index(n)
-    incroci = 0
+    crossings = 0
     for i in range(len(tau_orders)):
         if tau_orders[i] >= 0 and ((tau_orders[i] > n and i < j) or (tau_orders[i] < n and i > j)):
-            incroci += 1
-    return incroci
+            crossings += 1
+    return crossings
 
-# Function to count total crossings
+# Funzione per contare gli incroci totali
 def n_crossings(sigma, tau_orders):
     incroci = 0
     for i in range(len(sigma)):
         incroci += crossings_on_node(tau_orders, i)
     return incroci / 2
 
-# Function to count crossings on a binary cluster
+# Funzione per contare gli incroci su un cluster binario
 def crossings_on_binary_cluster(v, tau_orders):
     r_bounds_min, r_bounds_max = v.children[1].min_bound, v.children[1].max_bound
     l_bounds_min, l_bounds_max = v.children[0].min_bound, v.children[0].max_bound
@@ -90,23 +90,25 @@ def crossings_on_binary_cluster(v, tau_orders):
 
     return actual_crossings, actual_crossings_switched, ltau
 
-# Function to add a node to the graph
+# Funzione per aggiungere un nodo al grafo
 def add_node(root, dot):
-    if root.value is not None:dot.node(root.id, fontcolor='red')
-    else: dot.node(root.id, fontcolor='black')
+    if root.value is not None:
+        dot.node(root.id, fontcolor='red')
+    else:
+        dot.node(root.id, fontcolor='black')
     if root.parent:
         dot.edge(root.parent.id, root.id)
     for child in root.children:
         dot.fontcolor = 'black'
         add_node(child, dot)
 
-# Function to plot the tree
+# Funzione per plottare l'albero
 def plot(root, name, run_n):
     dot = graphviz.Digraph(comment='tree')
     add_node(root, dot)
     dot.render(f'{name}_run_{run_n}', view=False, directory=name, format='png')
 
-# Function to compute crossings in the tree
+# Funzione per calcolare gli incroci nell'albero
 def compute_crossings(v, tau_orders):
     if len(v.children) <= 1:
         return
@@ -121,7 +123,7 @@ def compute_crossings(v, tau_orders):
     compute_crossings(v.children[0], ltau)
     compute_crossings(v.children[1], rtau)
 
-# Function to set links between nodes
+# Funzione per impostare i collegamenti tra i nodi
 def set_links(s, t, L):
     s_links = dict()
     t_links = dict()
@@ -139,10 +141,9 @@ def set_links(s, t, L):
         t_links[link[1]] += 1
     return links, s_links, t_links
 
-# Function to binarize the tree
+# Funzione per binarizzare l'albero
 def binarize_tree(root, seed):
     l = len(root.children)
-
     if l > 2:
         root.splitted = True
         random.seed(seed)
@@ -155,7 +156,7 @@ def binarize_tree(root, seed):
     for c in root.children:
         binarize_tree(c, seed)
 
-# Function to print the tree
+# Funzione per stampare l'albero
 def print_tree(root):
     if not root.children or root.value is not None:
         return f'{root.value} ' if root.value else 'None '
@@ -185,19 +186,18 @@ def normalize_leafs(root, links):
             Node.set_id_counter(root)   # Aggiorna l'id del nodo
             root.set_children(new_children)  # Imposta i nuovi figli
 
-# Function to create a tree from a list
+# Funzione per creare un albero da una lista
 def create_tree(root, lista):
     if isinstance(lista, str):
         root.value = lista
         Node.set_id_counter(root)
         return
 
-    newchildren = list()
+    newchildren = []
     for c in lista:
         n = Node()
         create_tree(n, c)
         newchildren.append(n)
-
     root.set_children(newchildren)
 
 # Funzione per de-binarizzare l'albero (ripristinare la struttura originale)
@@ -205,11 +205,11 @@ def de_binarize_tree(root):
     for c in root.children:
         de_binarize_tree(c)
     if len(root.children) == 0:
-        # Rimuove l'appendice '_x' dal valore dei nodi foglia
+        # Rimuove il suffisso '_x' dai valori dei nodi foglia
         root.value = root.value.split('_')[0]
         Node.set_id_counter(root)  # Aggiorna l'id del nodo
     if root.splitted:
-        # Se il nodo è stato splittato, combina i figli
+        # Se il nodo è stato diviso, combina i figli
         temp_c = []
         if root.children[0].children:
             temp_c.extend(root.children[0].children)
@@ -220,9 +220,9 @@ def de_binarize_tree(root):
         else:
             temp_c.append(root.children[1])
         root.set_children(temp_c)
-        root.splitted = False  # Resetta il flag di splitting
+        root.splitted = False  # Resetta il flag di divisione
 
-# Use enumerate and simplify conditionals in get_tau_indexes
+# Usa enumerate e semplifica le condizioni in get_tau_indexes
 def get_tau_indexes(rT, sigma, links):
     tau = get_linear_order(rT)
     tau_order = [-1] * len(tau)
@@ -232,7 +232,7 @@ def get_tau_indexes(rT, sigma, links):
             tau_order[tau.index(node_name_T)] = i
     return tau_order
 
-# Function to set ranges on the tree
+# Funzione per impostare i range sull'albero
 def set_ranges_on_tree(root, order):
     if len(root.children) == 0:
         root.min_bound = root.max_bound = order.index(root.value)
@@ -242,7 +242,7 @@ def set_ranges_on_tree(root, order):
         root.max_bound = root.children[-1].max_bound
         root.min_bound = root.children[0].min_bound
 
-# Simplify remove_single_child function
+# Semplifica la funzione remove_single_child
 def remove_single_child(root):
     while len(root.children) == 1:
         child = root.children[0]
@@ -251,7 +251,7 @@ def remove_single_child(root):
     for c in root.children:
         remove_single_child(c)
 
-# Simplify heuristic function
+# Semplifica la funzione heuristic
 def heuristic(rootS, rootT, s_l, t_l, depth, hd, link):
     best = 9999
     for _ in range(depth):
@@ -311,11 +311,15 @@ def main(S, T, L):
     create_tree(rootT, T)
     # Rimuove i vecchi output dalle directory
     try:
-        for filename in os.listdir('bestS'):os.remove(f'bestS/{filename}')
-    except FileNotFoundError:os.mkdir('bestS')
+        for filename in os.listdir('bestS'):
+            os.remove(f'bestS/{filename}')
+    except FileNotFoundError:
+        os.mkdir('bestS')
     try:
-        for filename in os.listdir('bestT'):os.remove(f'bestT/{filename}')
-    except FileNotFoundError:os.mkdir('bestT')
+        for filename in os.listdir('bestT'):
+            os.remove(f'bestT/{filename}')
+    except FileNotFoundError:
+        os.mkdir('bestT')
     plot(rootS, 'bestS', 0)  # Plot iniziale dell'albero S
     plot(rootT, 'bestT', 0)  # Plot iniziale dell'albero T
     heuristic(rootS, rootT, s_l, t_l, depth, heuristic_d, link)  # Avvia l'euristica per ridurre gli incroci
