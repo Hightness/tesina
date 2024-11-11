@@ -10,7 +10,7 @@ class Node:
     def set_id_counter(node):
         if node.value is None:
             # Assegna un id univoco ai nodi intermedi (senza valore)
-            node.id = f'node_{Node.id_counter}'
+            node.id = f'_{Node.id_counter}_'
             Node.id_counter += 1
         else:
             # Usa il valore come id per i nodi foglia
@@ -92,17 +92,19 @@ def crossings_on_binary_cluster(v, tau_orders):
 
 # Function to add a node to the graph
 def add_node(root, dot):
-    dot.node(root.id)
+    if root.value is not None:dot.node(root.id, fontcolor='red')
+    else: dot.node(root.id, fontcolor='black')
     if root.parent:
         dot.edge(root.parent.id, root.id)
     for child in root.children:
+        dot.fontcolor = 'black'
         add_node(child, dot)
 
 # Function to plot the tree
 def plot(root, name, run_n):
     dot = graphviz.Digraph(comment='tree')
     add_node(root, dot)
-    dot.render(f'{name}_run_{run_n}', view=False, directory=f'output_{name}', format='png')
+    dot.render(f'{name}_run_{run_n}', view=False, directory=name, format='png')
 
 # Function to compute crossings in the tree
 def compute_crossings(v, tau_orders):
@@ -252,17 +254,13 @@ def remove_single_child(root):
 # Simplify heuristic function
 def heuristic(rootS, rootT, s_l, t_l, depth, hd, link):
     best = 9999
-    number_of_prints = 10
     for _ in range(depth):
         if best == 0:
             break
-        verbose = _ % (depth // number_of_prints) == 0
         normalize_leafs(rootS, s_l)
         normalize_leafs(rootT, t_l)
         binarize_tree(rootS, _)
         binarize_tree(rootT, _)
-        if verbose:
-            print(f'starting computation n.{_}, (best found: {best}), current crossings: {n_crossings(get_linear_order(rootS), get_tau_indexes(rootT, get_linear_order(rootS), link))}')
         for __ in range(hd):
             sigma = get_linear_order(rootS)
             tau_order = get_tau_indexes(rootT, sigma, link)
@@ -274,6 +272,7 @@ def heuristic(rootS, rootT, s_l, t_l, depth, hd, link):
             rootS, rootT = rootT, rootS
             if temp_nc < best:
                 best = temp_nc
+                print(f'computation n.{_}, (best found: {best})')
                 de_binarize_tree(rootS)
                 de_binarize_tree(rootT)
                 remove_single_child(rootS)
@@ -291,8 +290,6 @@ def heuristic(rootS, rootT, s_l, t_l, depth, hd, link):
         remove_single_child(rootT)
         randomly_swap_children(rootS)
         randomly_swap_children(rootT)
-        if verbose:
-            print(f'finished computation n.{_} (best found: {best})\n')
     return best
 
 # Funzione per scambiare casualmente i nodi figli
@@ -313,12 +310,14 @@ def main(S, T, L):
     create_tree(rootS, S)
     create_tree(rootT, T)
     # Rimuove i vecchi output dalle directory
-    for filename in os.listdir('output_S'):
-        os.remove(f'output_S/{filename}')
-    for filename in os.listdir('output_T'):
-        os.remove(f'output_T/{filename}')
-    plot(rootS, 'S', 0)  # Plot iniziale dell'albero S
-    plot(rootT, 'T', 0)  # Plot iniziale dell'albero T
+    try:
+        for filename in os.listdir('bestS'):os.remove(f'bestS/{filename}')
+    except FileNotFoundError:os.mkdir('bestS')
+    try:
+        for filename in os.listdir('bestT'):os.remove(f'bestT/{filename}')
+    except FileNotFoundError:os.mkdir('bestT')
+    plot(rootS, 'bestS', 0)  # Plot iniziale dell'albero S
+    plot(rootT, 'bestT', 0)  # Plot iniziale dell'albero T
     heuristic(rootS, rootT, s_l, t_l, depth, heuristic_d, link)  # Avvia l'euristica per ridurre gli incroci
 
 # Esempio di utilizzo della funzione main
