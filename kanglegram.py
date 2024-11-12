@@ -252,8 +252,9 @@ def remove_single_child(root):
         remove_single_child(c)
 
 # Semplifica la funzione heuristic
-def heuristic(rootS, rootT, s_l, t_l, depth, hd, link):
+def heuristic(rootS, rootT, s_l, t_l, depth, hd, random_d, link):
     best = 9999
+    rand_call = 0
     for _ in range(depth):
         if best == 0:
             break
@@ -288,8 +289,12 @@ def heuristic(rootS, rootT, s_l, t_l, depth, hd, link):
         de_binarize_tree(rootT)
         remove_single_child(rootS)
         remove_single_child(rootT)
-        randomly_swap_children(rootS)
-        randomly_swap_children(rootT)
+        rand_call += 1
+        if rand_call == random_d:
+            randomly_swap_children(rootS)
+            randomly_swap_children(rootT)
+            rand_call = 0
+
     return best
 
 # Funzione per scambiare casualmente i nodi figli
@@ -305,6 +310,7 @@ def randomly_swap_children(root):
 def main(S, T, L):
     depth = int(input('Inserisci il numero di iterazioni: '))
     heuristic_d = int(input('Inserisci il numero di iterazioni per l\'euristica: '))
+    random_d = int(input('inserisci l\'intervallo per uscire da un minimo locale: '))
     link, s_l, t_l = set_links(S, T, L)
     rootS, rootT = Node(), Node()
     create_tree(rootS, S)
@@ -322,7 +328,7 @@ def main(S, T, L):
         os.mkdir('bestT')
     plot(rootS, 'bestS', 0)  # Plot iniziale dell'albero S
     plot(rootT, 'bestT', 0)  # Plot iniziale dell'albero T
-    heuristic(rootS, rootT, s_l, t_l, depth, heuristic_d, link)  # Avvia l'euristica per ridurre gli incroci
+    heuristic(rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, link)  # Avvia l'euristica per ridurre gli incroci
 
 # Esempio di utilizzo della funzione main
 main(
