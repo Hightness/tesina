@@ -10,7 +10,7 @@ class Node:
     def set_id_counter(node):
         if node.value is None:
             # Assegna un id univoco ai nodi intermedi (senza valore)
-            node.id = f'_{Node.id_counter}_'
+            node.id = f'({Node.id_counter})'
             Node.id_counter += 1
         else:
             # Usa il valore come id per i nodi foglia
@@ -317,13 +317,11 @@ def main(S, T, L):
     create_tree(rootT, T)
     # Rimuove i vecchi output dalle directory
     try:
-        for filename in os.listdir('bestS'):
-            os.remove(f'bestS/{filename}')
+        for filename in os.listdir('bestS'):os.remove(f'bestS/{filename}')
     except FileNotFoundError:
         os.mkdir('bestS')
     try:
-        for filename in os.listdir('bestT'):
-            os.remove(f'bestT/{filename}')
+        for filename in os.listdir('bestT'):os.remove(f'bestT/{filename}')
     except FileNotFoundError:
         os.mkdir('bestT')
     plot(rootS, 'bestS', 0)  # Plot iniziale dell'albero S
