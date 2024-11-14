@@ -2,6 +2,8 @@ max_depth = 0;
 initial_crossings = 0;
 let bestTrees = [];
 let currentBestIndex = 0;
+let connectionsSVG;
+let startTime; // Initialize start time
 
 class Node {
     static id_counter = 0;
@@ -34,8 +36,6 @@ class Node {
 const get_linear_order = V => typeof V === 'string' ? [V] : V instanceof Node ? V.children.length === 0 ? [V.value] : V.children.flatMap(get_linear_order) : V.flatMap(get_linear_order);
 
 const n_crossings = (sigma, tau_orders) => sigma.reduce((incroci, _, i) => incroci + crossings_on_node(tau_orders, i), 0) / 2;
-
-let connectionsSVG;
 
 const drawConnections = links => {
     connectionsSVG.selectAll('*').remove();
@@ -89,14 +89,20 @@ const drawConnections = links => {
             .attr('fill', 'red');
         connectionsSVG.append('text')
             .attr('x', x)
-            .attr('y', y)
+            .attr('cy', y)
             .attr('dy', -4)
             .attr('text-anchor', 'middle')
             .attr('font-size', '4px')
             .attr('fill', 'black')
             .text(count > 1 ? count : '');
     });
-    document.getElementById('crossings').innerText = `Crossings: ${tot}`;
+    //get only the text with the Time, so split the string and get the second part
+    testo = document.getElementById('crossings').innerText;
+    if (!testo.includes("Crossings:"))document.getElementById('crossings').innerText = `Crossings: ${tot} | ${testo}`;
+    else {
+        testo = testo.split("|")[1];
+        document.getElementById('crossings').innerText = `Crossings: ${tot} | ${testo}`;
+    }
 }
 
 const isLeafIntersection = (line1, line2) => {
@@ -124,32 +130,44 @@ const isBetween = (value, min, max) => (value >= Math.min(min, max) && value <= 
 
 const plot = (root, containerId, links) => {
     const convertToTreant = node => ({
-        text: { name: node.value || node.id },
-        HTMLclass: node.children.length === 0 ? `leaf-node depth-${node.depth}` : '',
+        text: { name: node.value !== null ? node.value : '' },
+        HTMLclass: node.children.length > 0 ? `internal-node` : `leaf-node`,
         attributes: { 'data-id': node.id },
         children: node.children.length > 0 ? node.children.map(convertToTreant) : undefined
     });
 
-    const treeConfig = {
-        chart: {
-            container: `#${containerId}`,
-            connectors: { type: 'straight' },
-            node: { HTMLclass: containerId === 'bestT' ? 'flipped' : '' },
-            levelSeparation: 50,
-            siblingSeparation: 10,
-            subTeeSeparation: 10,
-            rootOrientation: 'NORTH',
-            scrollbar: 'fancy',
-            padding: 20,
-            zoom: true
-        },
-        nodeStructure: convertToTreant(root)
-    };
-    new Treant(treeConfig);
+    // Function to render the Treant chart
+    const renderTreant = () => {
+        // Clear existing Treant charts
+        document.querySelector(`#${containerId}`).innerHTML = '';
 
-    if (containerId === 'bestT') {
-        setTimeout(() => drawConnections(links), 500);
-    }
+        // Recreate treeConfig with updated dimensions
+        console.log(window.innerHeight)
+        const treeConfig = {
+            chart: {
+                container: `#${containerId}`,
+                connectors: { type: 'curve' },
+                node: { HTMLclass: containerId === 'bestT' ? 'flipped' : '' },
+                levelSeparation: window.innerHeight / 10,
+                siblingSeparation: window.innerWidth / 25,
+                subTeeSeparation: window.innerWidth / 25,
+                rootOrientation: 'NORTH',
+                padding: window.innerHeight / 10,
+                zoom: true
+            },
+            nodeStructure: convertToTreant(root)
+        };
+        new Treant(treeConfig);
+
+        if (containerId === 'bestT') {
+            setTimeout(() => drawConnections(links), 500);
+        }
+    };
+
+    renderTreant();
+
+    // Add resize event listener
+    window.addEventListener('resize', renderTreant);
 }
 
 const groupTreesIntoBlock = () => {
@@ -180,19 +198,27 @@ const groupTreesIntoBlock = () => {
         .attr('height', '100%');
 }
 
-const showNextBestTree = () => {
+const showNextBestTree = (n) => {
     if (bestTrees.length === 0) {
         alert('No best trees found yet.');
         return;
     }
-    currentBestIndex = (currentBestIndex + 1) % bestTrees.length;
+    currentBestIndex = (currentBestIndex + n + bestTrees.length) % bestTrees.length;
     const bestTree = bestTrees[currentBestIndex];
-    const links = bestTrees[currentBestIndex].links;
+    const links = bestTree.links;
     de_binarize_tree(bestTree.rootS);
     de_binarize_tree(bestTree.rootT);
     plot(bestTree.rootS, 'bestS', links);
     plot(bestTree.rootT, 'bestT', links);
     groupTreesIntoBlock();
+
+    // Update crossings with time
+    testo = document.getElementById('crossings').innerText;
+    if(!testo.includes("Time:"))document.getElementById('crossings').innerText = `${testo} | Time: ${bestTree.time} ms`;
+    else {
+        testo = testo.split("|")[0];
+        document.getElementById('crossings').innerText = `${testo} |Time: ${bestTree.time} ms`;
+    }
 }
 
 const compute_crossings = (v, tau_orders) => {
@@ -415,9 +441,16 @@ const heuristic = (rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, link, b
             link = Object.fromEntries(Object.entries(link).map(([k, v]) => [v, k]));
             if (temp_nc < best) {
                 best = temp_nc;
+                const elapsedTime = Date.now() - startTime; // Calculate elapsed time
                 bestRootS = cloneTree(rootS);
                 bestRootT = cloneTree(rootT);
-                bestTrees.push({ rootS: bestRootS, rootT: bestRootT, crossings: best, links: link });
+                bestTrees.push({ 
+                    rootS: bestRootS, 
+                    rootT: bestRootT, 
+                    crossings: best, 
+                    links: link, 
+                    time: elapsedTime // Store elapsed time
+                });
             }
             [s_l, t_l] = [t_l, s_l];
             [rootS, rootT] = [rootT, rootS];
@@ -433,6 +466,7 @@ const heuristic = (rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, link, b
 }
 
 const main = (S, T, L) => {
+    startTime = Date.now(); // Record the start time
     [links, s_links, t_links] = set_links(S, T, L);
     let rootS = new Node();
     let rootT = new Node();
@@ -448,7 +482,7 @@ const main = (S, T, L) => {
     tau_order = get_tau_indexes(rootT, sigma, links);
 
     let initial_crossings = n_crossings(sigma, tau_order);
-    bestTrees.push({ rootS: cloneTree(rootS), rootT: cloneTree(rootT), crossings: initial_crossings, links: links });
+    bestTrees.push({ rootS: cloneTree(rootS), rootT: cloneTree(rootT), crossings: initial_crossings, links: links , time:0});
 
     de_binarize_tree(rootS);
     de_binarize_tree(rootT);
@@ -460,6 +494,7 @@ const main = (S, T, L) => {
 
 const startVisualization = () => {
     bestTrees = [];
+    currentBestIndex = 0;
     Node.id_counter = 0;
     let depth = parseInt(document.getElementById('depth').value);
     let heuristic_d = parseInt(document.getElementById('heuristic_d').value);
@@ -494,4 +529,5 @@ document.addEventListener('DOMContentLoaded', () => {
         .attr('width', '100%')
         .attr('height', '100%');
     startVisualization();
+    document.getElementById('crossings').innerText = `Time: 0 ms`;
 });
