@@ -37,7 +37,7 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 1;
+            z-index: 3; /* Increased from 1 to 3 */
         }
         .chart { 
             flex: 1;
@@ -46,8 +46,8 @@
             position: relative;
         }
         #crossings {
-            padding: 10px;
             text-align: center;
+            font-size: large;
             background: white;
         }
         .node {
@@ -59,6 +59,7 @@
             padding: 2px;     /* Reduced from 3px */
         }
         .flipped { transform: rotate(180deg); }
+        
         .leaf-node { text-align: center; }
         /* Add styles based on depth */
         .leaf-node.depth-1 > .node > .content {
@@ -73,20 +74,21 @@
 <body>
     <div class="controls">
         <label for="depth">Depth:</label>
-        <input type="number" id="depth" value="10">
+        <input type="number" id="depth" value="1000">
         <label for="heuristic_d">Heuristic Depth:</label>
-        <input type="number" id="heuristic_d" value="5">
+        <input type="number" id="heuristic_d" value="10">
         <label for="random_d">Random Depth:</label>
         <input type="number" id="random_d" value="3">
         <button onclick="startVisualization()">Start</button>
         <button onclick="showNextBestTree()">Show Next Best Tree</button>
     </div>
     <div class="visualization-container">
-        <svg class="connections-svg"></svg> <!-- Added SVG for connections -->
+        <svg class="connections-svg"></svg> <!-- Ensure SVG covers the entire container -->
         <div id="bestS" class="chart"></div>
         <div id="bestT" class="chart flipped"></div>
     </div>
     <div id="crossings"></div>
+    <!-- Ensure kanaglegram.js is included after seedrandom -->
     <script src="kanaglegram.js"></script>
 </body>
 </html>

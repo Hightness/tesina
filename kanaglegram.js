@@ -1,3 +1,8 @@
+max_depth = 0;
+initial_crossings = 0;
+let bestTrees = [];
+let currentBestIndex = 0;
+
 class Node {
     static id_counter = 0;
     static set_id_counter(node) {
@@ -26,43 +31,172 @@ class Node {
     }
 }
 
-function get_linear_order(V) {
-    if (typeof V === 'string') return [V];
-    if (V instanceof Node) return V.children.length === 0 ? [V.value] : V.children.flatMap(get_linear_order);
-    return V.flatMap(get_linear_order);
+const get_linear_order = V => typeof V === 'string' ? [V] : V instanceof Node ? V.children.length === 0 ? [V.value] : V.children.flatMap(get_linear_order) : V.flatMap(get_linear_order);
+
+const n_crossings = (sigma, tau_orders) => sigma.reduce((incroci, _, i) => incroci + crossings_on_node(tau_orders, i), 0) / 2;
+
+let connectionsSVG;
+
+const drawConnections = links => {
+    connectionsSVG.selectAll('*').remove();
+    const lines = [];
+    for ([sourceId, targetId] of Object.entries(links)) {
+        sourceId = sourceId.split('_')[0];
+        targetId = targetId.split('_')[0];
+        nodes = document.querySelectorAll(`p.node-name`);
+        const targetNode = Array.from(nodes).find(node => node.textContent.trim() === sourceId);
+        const sourceNode = Array.from(nodes).find(node => node.textContent.trim() === targetId);
+        const sourceRect = sourceNode.getBoundingClientRect();
+        const targetRect = targetNode.getBoundingClientRect();
+        const containerRect = document.querySelector('#tree-container').getBoundingClientRect();
+        const x1 = sourceRect.left + sourceRect.width / 2 - containerRect.left;
+        const y1 = sourceRect.top + sourceRect.height / 2 - containerRect.top;
+        const x2 = targetRect.left + targetRect.width / 2 - containerRect.left;
+        const y2 = targetRect.top + targetRect.height / 2 - containerRect.top;
+        lines.push({ x1, y1, x2, y2, sourceId, targetId });
+        connectionsSVG.append('line')
+            .attr('x1', x1)
+            .attr('y1', y1)
+            .attr('x2', x2)
+            .attr('y2', y2)
+            .attr('stroke', '#666')
+            .attr('stroke-width', 0.5)
+            .attr('opacity', 0.5);
+    }
+
+    // Check for intersections and add red dots with numbers
+    const intersections = {};
+    for (let i = 0; i < lines.length; i++) {
+        for (let j = i + 1; j < lines.length; j++) {
+            const intersection = getLineIntersection(lines[i], lines[j]);
+            if (intersection && !isLeafIntersection(lines[i], lines[j])) {
+                const key = `${intersection.x},${intersection.y}`;
+                if (!intersections[key]) {
+                    intersections[key] = { ...intersection, count: 0 };
+                }
+                intersections[key].count += 1;
+            }
+        }
+    }
+
+    let tot = 0;
+    Object.values(intersections).forEach(({ x, y, count }) => {
+        tot += 1;
+        connectionsSVG.append('circle')
+            .attr('cx', x)
+            .attr('cy', y)
+            .attr('r', 1)
+            .attr('fill', 'red');
+        connectionsSVG.append('text')
+            .attr('x', x)
+            .attr('y', y)
+            .attr('dy', -4)
+            .attr('text-anchor', 'middle')
+            .attr('font-size', '4px')
+            .attr('fill', 'black')
+            .text(count > 1 ? count : '');
+    });
+    document.getElementById('crossings').innerText = `Crossings: ${tot}`;
 }
 
-function n_crossings(sigma, tau_orders) {
-    return sigma.reduce((incroci, _, i) => incroci + crossings_on_node(tau_orders, i), 0) / 2;
+const isLeafIntersection = (line1, line2) => {
+    return line1.sourceId === line2.sourceId || line1.targetId === line2.targetId;
 }
 
-// Modify the plot function to calculate levelSeparation based on tree depth
-function plot(root, containerId) {
+const getLineIntersection = (line1, line2) => {
+    const { x1: x1, y1: y1, x2: x2, y2: y2 } = line1;
+    const { x1: x3, y1: y3, x2: x4, y2: y4 } = line2;
+
+    const denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+    if (denom === 0) return null; // Lines are parallel
+
+    const intersectX = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / denom;
+    const intersectY = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / denom;
+
+    if (isBetween(intersectX, x1, x2) && isBetween(intersectX, x3, x4) &&
+        isBetween(intersectY, y1, y2) && isBetween(intersectY, y3, y4)) {
+        return { x: intersectX, y: intersectY };
+    }
+    return null;
+}
+
+const isBetween = (value, min, max) => (value >= Math.min(min, max) && value <= Math.max(max, min));
+
+const plot = (root, containerId, links) => {
     const convertToTreant = node => ({
         text: { name: node.value || node.id },
         HTMLclass: node.children.length === 0 ? `leaf-node depth-${node.depth}` : '',
-        attributes: { 'data-id': node.value || node.id },
+        attributes: { 'data-id': node.id },
         children: node.children.length > 0 ? node.children.map(convertToTreant) : undefined
     });
 
     const treeConfig = {
         chart: {
             container: `#${containerId}`,
-            connectors: { type: 'straight' }, // Changed from 'curve' to 'straight'
+            connectors: { type: 'straight' },
             node: { HTMLclass: containerId === 'bestT' ? 'flipped' : '' },
-            levelSeparation: 50,          // Reduced from 100
-            siblingSeparation: 25,        // Reduced from 50
-            subTeeSeparation: 25,         // Reduced from 50
-            rootOrientation: 'NORTH'
+            levelSeparation: 50,
+            siblingSeparation: 10,
+            subTeeSeparation: 10,
+            rootOrientation: 'NORTH',
+            scrollbar: 'fancy',
+            padding: 20,
+            zoom: true
         },
         nodeStructure: convertToTreant(root)
     };
     new Treant(treeConfig);
+
+    if (containerId === 'bestT') {
+        setTimeout(() => drawConnections(links), 500);
+    }
 }
 
-// Function to compute crossings in the tree
-function compute_crossings(v, tau_orders) {
-    if (v.children.length <= 1) return;
+const groupTreesIntoBlock = () => {
+    const bestS = document.getElementById('bestS');
+    const bestT = document.getElementById('bestT');
+    const container = document.createElement('div');
+    container.id = 'tree-container';
+    container.style.position = 'relative';
+    container.style.display = 'inline-block';
+    container.appendChild(bestS);
+    container.appendChild(bestT);
+    document.body.appendChild(container);
+
+    // Ensure connectionsSVG is resizable
+    const svgContainer = document.createElement('div');
+    svgContainer.className = 'svg-container';
+    svgContainer.style.position = 'absolute';
+    svgContainer.style.top = '0';
+    svgContainer.style.left = '0';
+    svgContainer.style.width = '100%';
+    svgContainer.style.height = '100%';
+    container.appendChild(svgContainer);
+
+    connectionsSVG = d3.select(svgContainer)
+        .append('svg')
+        .attr('class', 'connections-svg')
+        .attr('width', '100%')
+        .attr('height', '100%');
+}
+
+const showNextBestTree = () => {
+    if (bestTrees.length === 0) {
+        alert('No best trees found yet.');
+        return;
+    }
+    currentBestIndex = (currentBestIndex + 1) % bestTrees.length;
+    const bestTree = bestTrees[currentBestIndex];
+    const links = bestTrees[currentBestIndex].links;
+    de_binarize_tree(bestTree.rootS);
+    de_binarize_tree(bestTree.rootT);
+    plot(bestTree.rootS, 'bestS', links);
+    plot(bestTree.rootT, 'bestT', links);
+    groupTreesIntoBlock();
+}
+
+const compute_crossings = (v, tau_orders) => {
+    if (v.children.length <= 1)return;
     let [crossings, crossings_switched, ltau] = crossings_on_binary_cluster(v, tau_orders);
     let rtau = tau_orders.filter(x => !ltau.includes(x) && x !== -1);
     if (crossings_switched < crossings) {
@@ -73,12 +207,11 @@ function compute_crossings(v, tau_orders) {
     compute_crossings(v.children[1], rtau);
 }
 
-// Function to binarize the tree
-function binarize_tree(root, seed) {
+const binarize_tree = (root, seed) => {
     let l = root.children.length;
     if (l > 2) {
         root.splitted = true;
-        let q = Math.floor(Math.random() * (l - 1));
+        let q = Math.floor(Math.random(seed) * (l - 1));
         let n1 = new Node();
         let n2 = new Node();
         n1.set_children(root.children.slice(0, q + 1));
@@ -88,8 +221,7 @@ function binarize_tree(root, seed) {
     for (let c of root.children) binarize_tree(c, seed);
 }
 
-// Function to create a tree from a list
-function create_tree(root, lista) {
+const create_tree = (root, lista) => {
     if (typeof lista === 'string') {
         root.value = lista;
         Node.set_id_counter(root);
@@ -104,14 +236,16 @@ function create_tree(root, lista) {
     root.set_children(new_children);
 }
 
-// Function to randomly swap child nodes
-function randomly_swap_children(root) {
-    if (root.children.length > 1) root.children.sort(() => Math.random() - 0.5);
-    for (let child of root.children) randomly_swap_children(child);
+const randomly_swap_children = root => {
+    if (root.children.length > 1) {
+        // Shuffle the children array
+        root.children.sort(() => Math.random() - 0.5);
+    }
+    // Recursively apply to children
+    root.children.forEach(child => randomly_swap_children(child));
 }
 
-// Sets links
-function set_links(S, T, L) {
+const set_links = (S, T, L) => {
     let s_links = {}, t_links = {};
     for (let n of get_linear_order(S)) s_links[n] = 0;
     for (let n of get_linear_order(T)) t_links[n] = 0;
@@ -126,8 +260,7 @@ function set_links(S, T, L) {
     return [links, s_links, t_links];
 }
 
-// Function to normalize leaf nodes
-function normalize_leafs(root, links) {
+const normalize_leafs = (root, links) => {
     if (root.value === null) {
         for (let c of root.children) normalize_leafs(c, links);
     } else {
@@ -148,8 +281,7 @@ function normalize_leafs(root, links) {
     }
 }
 
-// Function to get tau indexes
-function get_tau_indexes(rT, sigma, links) {
+const get_tau_indexes = (rT, sigma, links) => {
     let tau = get_linear_order(rT);
     let tau_order = new Array(tau.length).fill(-1);
     sigma.forEach((s, i) => {
@@ -158,27 +290,27 @@ function get_tau_indexes(rT, sigma, links) {
             tau_order[tau.indexOf(node_name_T)] = i;
         }
     });
-    return tau_order;
+    //reverse tau_order so that first element is last
+    return tau_order.reverse();
 }
 
-// Function to set ranges on the tree
-function set_ranges_on_tree(root, order) {
+const set_ranges_on_tree = (root, order) => {
     if (root.children.length === 0) {
         root.min_bound = root.max_bound = order.indexOf(root.value);
+    } else if (root.children.length === 1) {
+        set_ranges_on_tree(root.children[0], order);
+        root.max_bound = root.min_bound = root.children[0].max_bound
     } else {
         set_ranges_on_tree(root.children[0], order);
-        set_ranges_on_tree(root.children[root.children.length - 1], order);
-        root.max_bound = root.children[root.children.length - 1].max_bound;
+        set_ranges_on_tree(root.children[1], order);
+        root.max_bound = root.children[1].max_bound;
         root.min_bound = root.children[0].min_bound;
     }
 }
-function get_depth(root) {
-    if (root.children.length === 0) return 1;
-    return 1 + get_depth(root.children[0]);
-}
 
-// Function to remove single child nodes
-function remove_single_child(root, max_depth) {
+const get_depth = root => root.children.length === 0 ? 1 : 1 + get_depth(root.children[0]);
+
+const remove_single_child = (root, max_depth) => {
     if (root.children.length === 1 && root.children[0].depth >= max_depth) {
         let child = root.children[0];
         root.value = child.value;
@@ -189,8 +321,7 @@ function remove_single_child(root, max_depth) {
     root.children.forEach(child => remove_single_child(child, max_depth));
 }
 
-// Function to de-binarize the tree
-function de_binarize_tree_r(root) {
+const de_binarize_tree_r = root => {
     root.children.forEach(child => de_binarize_tree(child));
     if (root.children.length === 0) {
         root.value = root.value.split('_')[0];
@@ -206,14 +337,14 @@ function de_binarize_tree_r(root) {
         root.splitted = false;
     }
 }
-function de_binarize_tree(root) {
+
+const de_binarize_tree = root => {
     de_binarize_tree_r(root);
     assign_depth(root, 0);
     remove_single_child(root, max_depth);
 }
 
-// Function to count crossings on a node
-function crossings_on_node(tau_orders, n) {
+const crossings_on_node = (tau_orders, n) => {
     if (!tau_orders.includes(n)) return 0;
     let j = tau_orders.indexOf(n);
     let crossings = 0;
@@ -223,8 +354,7 @@ function crossings_on_node(tau_orders, n) {
     return crossings;
 }
 
-// Function to count crossings on a binary cluster
-function crossings_on_binary_cluster(v, tau_orders) {
+const crossings_on_binary_cluster = (v, tau_orders) => {
     let r_bounds_min = v.children[1].min_bound;
     let r_bounds_max = v.children[1].max_bound;
     let l_bounds_min = v.children[0].min_bound;
@@ -250,8 +380,7 @@ function crossings_on_binary_cluster(v, tau_orders) {
     return [actual_crossings, actual_crossings_switched, ltau];
 }
 
-// Function to deep clone a tree without the 'parent' property
-function cloneTree(node) {
+const cloneTree = node => {
     let newNode = new Node(node.value);
     newNode.id = node.id;
     newNode.splitted = node.splitted;
@@ -259,11 +388,7 @@ function cloneTree(node) {
     return newNode;
 }
 
-let bestTrees = [];
-let currentBestIndex = 0;
-
-// Add a function to assign depth to leaf nodes
-function assign_depth(node, current_depth = 0) {
+const assign_depth = (node, current_depth = 0) => {
     if (node.children.length === 0 && node.value !== null) {
         node.depth = current_depth;
     } else {
@@ -271,8 +396,7 @@ function assign_depth(node, current_depth = 0) {
     }
 }
 
-// Ensure pad_tree is called after tree manipulations to align all leaves
-function heuristic(rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, link, best) {
+const heuristic = (rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, link, best) => {
     let bestRootS, bestRootT, rand_call = 0;
     for (let i = 0; i < depth; i++) {
         if (best === 0) break;
@@ -281,19 +405,22 @@ function heuristic(rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, link, b
         binarize_tree(rootS, i);
         binarize_tree(rootT, i);
         for (let j = 0; j < heuristic_d; j++) {
-            let sigma = get_linear_order(rootS), tau_order = get_tau_indexes(rootT, sigma, link);
+            let sigma = get_linear_order(rootS);
             set_ranges_on_tree(rootS, sigma);
+            let tau_order = get_tau_indexes(rootT, sigma, link);
             compute_crossings(rootS, tau_order);
+            sigma = get_linear_order(rootS);
+            tau_order = get_tau_indexes(rootT, sigma, link);
             let temp_nc = n_crossings(sigma, tau_order);
             link = Object.fromEntries(Object.entries(link).map(([k, v]) => [v, k]));
-            [s_l, t_l] = [t_l, s_l];
-            [rootS, rootT] = [rootT, rootS];
             if (temp_nc < best) {
                 best = temp_nc;
                 bestRootS = cloneTree(rootS);
                 bestRootT = cloneTree(rootT);
-                bestTrees.push({ rootS: bestRootS, rootT: bestRootT, crossings: best });
+                bestTrees.push({ rootS: bestRootS, rootT: bestRootT, crossings: best, links: link });
             }
+            [s_l, t_l] = [t_l, s_l];
+            [rootS, rootT] = [rootT, rootS];
         }
         de_binarize_tree(rootS);
         de_binarize_tree(rootT);
@@ -305,59 +432,39 @@ function heuristic(rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, link, b
     }
 }
 
-// Modify the showNextBestTree function to pad trees before plotting
-function showNextBestTree() {
-    if (bestTrees.length === 0) {
-        alert('No best trees found yet.');
-        return;
-    }
-    currentBestIndex = (currentBestIndex + 1) % bestTrees.length;
-    const bestTree = bestTrees[currentBestIndex];
-    
-    // Apply de-binarizing and remove single children before padding
-    de_binarize_tree(bestTree.rootS);
-    de_binarize_tree(bestTree.rootT);
-    
-    // Plot the padded trees
-    plot(bestTree.rootS, 'bestS');
-    plot(bestTree.rootT, 'bestT');
-    document.getElementById('crossings').innerText = `Crossings: ${bestTree.crossings}`;
-}
-max_depth = 0;
-
-// Main function to execute the program
-function main(S, T, L, depth, heuristic_d, random_d) {
-    let [link, s_l, t_l] = set_links(S, T, L);
+const main = (S, T, L) => {
+    [links, s_links, t_links] = set_links(S, T, L);
     let rootS = new Node();
     let rootT = new Node();
     create_tree(rootS, S);
     create_tree(rootT, T);
     max_depth = get_depth(rootS);
-    normalize_leafs(rootS, s_l);
-    normalize_leafs(rootT, t_l);
+    normalize_leafs(rootS, s_links);
+    normalize_leafs(rootT, t_links);
     binarize_tree(rootS, 0);
     binarize_tree(rootT, 0);
 
-    
-    initial_crossings = n_crossings(get_linear_order(rootS), get_tau_indexes(rootT, get_linear_order(rootS), link));
-    bestTrees.push({ rootS: rootS, rootT: rootT, crossings: initial_crossings});
+    sigma = get_linear_order(rootS);
+    tau_order = get_tau_indexes(rootT, sigma, links);
+
+    let initial_crossings = n_crossings(sigma, tau_order);
+    bestTrees.push({ rootS: cloneTree(rootS), rootT: cloneTree(rootT), crossings: initial_crossings, links: links });
 
     de_binarize_tree(rootS);
     de_binarize_tree(rootT);
 
-    plot(rootS, 'bestS');
-    plot(rootT, 'bestT');
-    document.getElementById('crossings').innerText = `Crossings: ${initial_crossings}`;
-
-    heuristic(rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, link, initial_crossings);
+    plot(rootS, 'bestS', links);
+    plot(rootT, 'bestT', links);
+    return [rootS, rootT, s_links, t_links, links, initial_crossings];
 }
 
-// Function to start the visualization
-function startVisualization() {
+const startVisualization = () => {
+    bestTrees = [];
+    Node.id_counter = 0;
     let depth = parseInt(document.getElementById('depth').value);
     let heuristic_d = parseInt(document.getElementById('heuristic_d').value);
     let random_d = parseInt(document.getElementById('random_d').value);
-    main(
+    [rootS, rootT, s_links, t_links, links, initial_crossings] = main(
         [[["t0", "t1", "t2", "t3"], ["t4", "t5", "t6"]],
          [["t7"]],
          [["t8", "t9"], ["t10", "t11"], ["t12"]],
@@ -374,11 +481,17 @@ function startVisualization() {
          ["t5", "b4"], ["t5", "b1"], ["t6", "b0"],
          ["t7", "b0"], ["t8", "b11"], ["t8", "b12"],
          ["t10", "b9"], ["t11", "b9"], ["t13", "b6"],
-         ["t14", "b6"], ["t15", "b7"], ["t16", "b8"]],
-        depth, heuristic_d, random_d
+         ["t14", "b6"], ["t15", "b7"], ["t16", "b8"]]
     );
+
+    // [rootS, rootT, s_links, t_links, links, initial_crossings] = main([[['a', 'b'], ['c']], [['d', 'e'], ['f', 'g']]], [[['1', '2'], ['3']], [['4', '5'], ['6', '7']]], [['a', '6'], ['b', '2'], ['f', '3'], ['d', '5'], ['f', '5'], ['f', '6'], ['g', '7']],)
+    heuristic(rootS, rootT, s_links, t_links, depth, heuristic_d, random_d, links, initial_crossings);
+    groupTreesIntoBlock();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    connectionsSVG = d3.select('.connections-svg')
+        .attr('width', '100%')
+        .attr('height', '100%');
     startVisualization();
 });

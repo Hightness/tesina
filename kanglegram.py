@@ -230,7 +230,7 @@ def get_tau_indexes(rT, sigma, links):
         if s in links:
             node_name_T = links[s]
             tau_order[tau.index(node_name_T)] = i
-    return tau_order
+    return tau_order[::-1]
 
 # Funzione per impostare i range sull'albero
 def set_ranges_on_tree(root, order):
@@ -265,9 +265,11 @@ def heuristic(rootS, rootT, s_l, t_l, depth, hd, random_d, link):
         for __ in range(hd):
             sigma = get_linear_order(rootS)
             tau_order = get_tau_indexes(rootT, sigma, link)
-            temp_nc = n_crossings(sigma, tau_order)
             set_ranges_on_tree(rootS, sigma)
             compute_crossings(rootS, tau_order)
+            sigma = get_linear_order(rootS)
+            tau_order = get_tau_indexes(rootT, sigma, link)
+            temp_nc = n_crossings(sigma, tau_order)
             link = {v: k for k, v in link.items()}
             s_l, t_l = t_l, s_l
             rootS, rootT = rootT, rootS
