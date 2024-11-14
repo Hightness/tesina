@@ -11,6 +11,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/treant-js/1.0/Treant.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/treant-js/1.0/Treant.min.js"></script>
     <style>
+        .circle{
+            font-size: 4px;
+            text-anchor: middle;
+            fill: black;
+        }
+        circle{ fill: red; r:1;}
+        line { stroke: green; stroke-width: 0.5; }
         body { 
             margin: 0; 
             padding: 0;
@@ -23,6 +30,20 @@
             background: white;
             z-index: 2;
         }
+        /* get tree-container id*/
+        #tree-container{
+            position: relative;
+            display: inline-block;
+        }
+
+        .svg-container{
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
         .visualization-container {
             flex: 1;
             display: flex;

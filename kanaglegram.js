@@ -41,74 +41,47 @@ const drawConnections = links => {
     connectionsSVG.selectAll('*').remove();
     const lines = [];
     for ([sourceId, targetId] of Object.entries(links)) {
-        sourceId = sourceId.split('_')[0];
-        targetId = targetId.split('_')[0];
         nodes = document.querySelectorAll(`p.node-name`);
-        const targetNode = Array.from(nodes).find(node => node.textContent.trim() === sourceId);
-        const sourceNode = Array.from(nodes).find(node => node.textContent.trim() === targetId);
-        const sourceRect = sourceNode.getBoundingClientRect();
-        const targetRect = targetNode.getBoundingClientRect();
+        const targetNode = Array.from(nodes).find(node => node.textContent.trim() === sourceId.split('_')[0]);
+        const sourceNode = Array.from(nodes).find(node => node.textContent.trim() === targetId.split('_')[0]);
+        const [sourceRect, targetRect] = [sourceNode.getBoundingClientRect(), targetNode.getBoundingClientRect()];
         const containerRect = document.querySelector('#tree-container').getBoundingClientRect();
-        const x1 = sourceRect.left + sourceRect.width / 2 - containerRect.left;
-        const y1 = sourceRect.top + sourceRect.height / 2 - containerRect.top;
-        const x2 = targetRect.left + targetRect.width / 2 - containerRect.left;
-        const y2 = targetRect.top + targetRect.height / 2 - containerRect.top;
+        const [x1, y1] = [sourceRect.left + sourceRect.width / 2 - containerRect.left, sourceRect.top + sourceRect.height / 2 - containerRect.top];
+        const [x2, y2] = [targetRect.left + targetRect.width / 2 - containerRect.left, targetRect.top + targetRect.height / 2 - containerRect.top];
         lines.push({ x1, y1, x2, y2, sourceId, targetId });
-        connectionsSVG.append('line')
-            .attr('x1', x1)
-            .attr('y1', y1)
-            .attr('x2', x2)
-            .attr('y2', y2)
-            .attr('stroke', '#666')
-            .attr('stroke-width', 0.5)
-            .attr('opacity', 0.5);
+        connectionsSVG.append('line').attr('x1', x1).attr('y1', y1).attr('x2', x2).attr('y2', y2);
     }
 
     // Check for intersections and add red dots with numbers
     const intersections = {};
+    let tot_intersections = 0;
     for (let i = 0; i < lines.length; i++) {
         for (let j = i + 1; j < lines.length; j++) {
             const intersection = getLineIntersection(lines[i], lines[j]);
-            if (intersection && !isLeafIntersection(lines[i], lines[j])) {
-                const key = `${intersection.x},${intersection.y}`;
-                if (!intersections[key]) {
-                    intersections[key] = { ...intersection, count: 0 };
-                }
+            if (intersection && lines[i].sourceId.split('_')[0] != lines[j].sourceId.split('_')[0] && lines[i].targetId.split('_')[0] != lines[j].targetId.split('_')[0]) {
+                [x_rounded, y_rounded] = [Math.round(intersection.x * 10) / 10, Math.round(intersection.y * 10) / 10];
+                const key = `${x_rounded},${y_rounded}`;
+                if (intersections[key] === undefined)intersections[key] = {count: 0, x: intersection.x, y: intersection.y };
                 intersections[key].count += 1;
+                tot_intersections += 1;
             }
         }
     }
 
-    let tot = 0;
     Object.values(intersections).forEach(({ x, y, count }) => {
-        tot += 1;
-        connectionsSVG.append('circle')
-            .attr('cx', x)
-            .attr('cy', y)
-            .attr('r', 1)
-            .attr('fill', 'red');
-        connectionsSVG.append('text')
-            .attr('x', x)
-            .attr('cy', y)
-            .attr('dy', -4)
-            .attr('text-anchor', 'middle')
-            .attr('font-size', '4px')
-            .attr('fill', 'black')
-            .text(count > 1 ? count : '');
+        connectionsSVG.append('circle').attr('cx', x).attr('cy', y);
+        if(count - 1 > 1)connectionsSVG.append('text').attr('class', 'circle').attr('x', x).attr('y', y).attr('dy', -2).text(count);
     });
     //get only the text with the Time, so split the string and get the second part
     testo = document.getElementById('crossings').innerText;
-    if (!testo.includes("Crossings:"))document.getElementById('crossings').innerText = `Crossings: ${tot} | ${testo}`;
+    if (!testo.includes("Crossings:"))document.getElementById('crossings').innerText = `Crossings: ${tot_intersections} | ${testo}`;
     else {
         testo = testo.split("|")[1];
-        document.getElementById('crossings').innerText = `Crossings: ${tot} | ${testo}`;
+        document.getElementById('crossings').innerText = `Crossings: ${tot_intersections} | ${testo}`;
     }
 }
 
-const isLeafIntersection = (line1, line2) => {
-    return line1.sourceId === line2.sourceId || line1.targetId === line2.targetId;
-}
-
+const isBetween = (value, min, max) => (value >= Math.min(min, max) && value <= Math.max(max, min));
 const getLineIntersection = (line1, line2) => {
     const { x1: x1, y1: y1, x2: x2, y2: y2 } = line1;
     const { x1: x3, y1: y3, x2: x4, y2: y4 } = line2;
@@ -126,7 +99,6 @@ const getLineIntersection = (line1, line2) => {
     return null;
 }
 
-const isBetween = (value, min, max) => (value >= Math.min(min, max) && value <= Math.max(max, min));
 
 const plot = (root, containerId, links) => {
     const convertToTreant = node => ({
@@ -142,15 +114,14 @@ const plot = (root, containerId, links) => {
         document.querySelector(`#${containerId}`).innerHTML = '';
 
         // Recreate treeConfig with updated dimensions
-        console.log(window.innerHeight)
         const treeConfig = {
             chart: {
                 container: `#${containerId}`,
                 connectors: { type: 'curve' },
                 node: { HTMLclass: containerId === 'bestT' ? 'flipped' : '' },
-                levelSeparation: window.innerHeight / 10,
-                siblingSeparation: window.innerWidth / 25,
-                subTeeSeparation: window.innerWidth / 25,
+                levelSeparation: window.innerHeight / 25,
+                siblingSeparation: window.innerWidth / 30,
+                subTeeSeparation: window.innerWidth / 30,
                 rootOrientation: 'NORTH',
                 padding: window.innerHeight / 10,
                 zoom: true
@@ -165,7 +136,6 @@ const plot = (root, containerId, links) => {
     };
 
     renderTreant();
-
     // Add resize event listener
     window.addEventListener('resize', renderTreant);
 }
@@ -175,8 +145,6 @@ const groupTreesIntoBlock = () => {
     const bestT = document.getElementById('bestT');
     const container = document.createElement('div');
     container.id = 'tree-container';
-    container.style.position = 'relative';
-    container.style.display = 'inline-block';
     container.appendChild(bestS);
     container.appendChild(bestT);
     document.body.appendChild(container);
@@ -184,18 +152,8 @@ const groupTreesIntoBlock = () => {
     // Ensure connectionsSVG is resizable
     const svgContainer = document.createElement('div');
     svgContainer.className = 'svg-container';
-    svgContainer.style.position = 'absolute';
-    svgContainer.style.top = '0';
-    svgContainer.style.left = '0';
-    svgContainer.style.width = '100%';
-    svgContainer.style.height = '100%';
     container.appendChild(svgContainer);
-
-    connectionsSVG = d3.select(svgContainer)
-        .append('svg')
-        .attr('class', 'connections-svg')
-        .attr('width', '100%')
-        .attr('height', '100%');
+    connectionsSVG = d3.select(svgContainer).append('svg').attr('class', 'connections-svg');
 }
 
 const showNextBestTree = (n) => {
@@ -233,18 +191,22 @@ const compute_crossings = (v, tau_orders) => {
     compute_crossings(v.children[1], rtau);
 }
 
-const binarize_tree = (root, seed) => {
+const binarize_tree = (root, seed, links) => {
+    normalize_leafs(root, links);
+    binarize_tree_r(root, seed);
+}
+
+const binarize_tree_r = (root, seed) => {
     let l = root.children.length;
     if (l > 2) {
         root.splitted = true;
         let q = Math.floor(Math.random(seed) * (l - 1));
-        let n1 = new Node();
-        let n2 = new Node();
+        let [n1, n2] = [new Node(), new Node()];
         n1.set_children(root.children.slice(0, q + 1));
         n2.set_children(root.children.slice(q + 1));
         root.set_children([n1, n2]);
     }
-    for (let c of root.children) binarize_tree(c, seed);
+    for (let c of root.children) binarize_tree_r(c, seed);
 }
 
 const create_tree = (root, lista) => {
@@ -426,14 +388,12 @@ const heuristic = (rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, link, b
     let bestRootS, bestRootT, rand_call = 0;
     for (let i = 0; i < depth; i++) {
         if (best === 0) break;
-        normalize_leafs(rootS, s_l);
-        normalize_leafs(rootT, t_l);
-        binarize_tree(rootS, i);
-        binarize_tree(rootT, i);
+        binarize_tree(rootS, i, s_l);
+        binarize_tree(rootT, i, t_l);
         for (let j = 0; j < heuristic_d; j++) {
             let sigma = get_linear_order(rootS);
-            set_ranges_on_tree(rootS, sigma);
             let tau_order = get_tau_indexes(rootT, sigma, link);
+            set_ranges_on_tree(rootS, sigma);
             compute_crossings(rootS, tau_order);
             sigma = get_linear_order(rootS);
             tau_order = get_tau_indexes(rootT, sigma, link);
@@ -442,15 +402,8 @@ const heuristic = (rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, link, b
             if (temp_nc < best) {
                 best = temp_nc;
                 const elapsedTime = Date.now() - startTime; // Calculate elapsed time
-                bestRootS = cloneTree(rootS);
-                bestRootT = cloneTree(rootT);
-                bestTrees.push({ 
-                    rootS: bestRootS, 
-                    rootT: bestRootT, 
-                    crossings: best, 
-                    links: link, 
-                    time: elapsedTime // Store elapsed time
-                });
+                [bestRootS ,bestRootT] = [cloneTree(rootS), cloneTree(rootT)];
+                bestTrees.push({ rootS: bestRootS, rootT: bestRootT, crossings: best, links: link, time: elapsedTime});
             }
             [s_l, t_l] = [t_l, s_l];
             [rootS, rootT] = [rootT, rootS];
@@ -473,10 +426,8 @@ const main = (S, T, L) => {
     create_tree(rootS, S);
     create_tree(rootT, T);
     max_depth = get_depth(rootS);
-    normalize_leafs(rootS, s_links);
-    normalize_leafs(rootT, t_links);
-    binarize_tree(rootS, 0);
-    binarize_tree(rootT, 0);
+    binarize_tree(rootS, 0, s_links);
+    binarize_tree(rootT, 0, t_links);
 
     sigma = get_linear_order(rootS);
     tau_order = get_tau_indexes(rootT, sigma, links);
