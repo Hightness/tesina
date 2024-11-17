@@ -1,4 +1,5 @@
 import random
+import numpy as np
 import graphviz
 import os
 
@@ -22,6 +23,7 @@ class Node:
         self.parent = None            # Riferimento al nodo genitore
         Node.set_id_counter(self)     # Imposta l'id del nodo
         self.splitted = False         # Indica se il nodo è stato diviso
+        self.standard_dev = 0         # Aggiungi l'attributo standard_dev
 
     # Metodo per scambiare la posizione di due nodi figli
     def switch_children(self, i1, i2):
@@ -246,23 +248,25 @@ def set_ranges_on_tree(root, order):
 def remove_single_child(root):
     while len(root.children) == 1:
         child = root.children[0]
-        root.value, root.id, root.splitted = child.value, child.id, child.splitted
+        root.value, root.id, root.splitted, root.standard_dev = child.value, child.id, child.splitted, child.standard_dev
         root.set_children(child.children)
     for c in root.children:
         remove_single_child(c)
 
 # Semplifica la funzione heuristic
-def heuristic(rootS, rootT, s_l, t_l, depth, hd, random_d, link):
-    best = 9999
-    rand_call = 0
-    for _ in range(depth):
-        if best == 0:
-            break
+def heuristic(rootS, rootT, s_l, t_l, random_d, link):
+    #initialize best to ininity
+    best = np.inf
+    rand_call = cur_ind = prev_ind = 0
+    while cur_ind - prev_ind < 300 and best != 0:
+        cur_ind += 1
         normalize_leafs(rootS, s_l)
         normalize_leafs(rootT, t_l)
-        binarize_tree(rootS, _)
-        binarize_tree(rootT, _)
-        for __ in range(hd):
+        binarize_tree(rootS, cur_ind)
+        binarize_tree(rootT, cur_ind)
+        cur_TSswap_ind = prev_TSswap_ind = 0
+        while cur_TSswap_ind - prev_TSswap_ind < 30:
+            cur_TSswap_ind += 1
             sigma = get_linear_order(rootS)
             tau_order = get_tau_indexes(rootT, sigma, link)
             set_ranges_on_tree(rootS, sigma)
@@ -275,17 +279,19 @@ def heuristic(rootS, rootT, s_l, t_l, depth, hd, random_d, link):
             rootS, rootT = rootT, rootS
             if temp_nc < best:
                 best = temp_nc
-                print(f'computation n.{_}, (best found: {best})')
+                prev_ind = cur_ind
+                prev_TSswap_ind = cur_TSswap_ind
+                print(f'computation n.{cur_ind}, (best found: {best})')
                 de_binarize_tree(rootS)
                 de_binarize_tree(rootT)
                 remove_single_child(rootS)
                 remove_single_child(rootT)
-                plot(rootS, 'bestS', _)
-                plot(rootT, 'bestT', _)
+                plot(rootS, 'bestS', cur_ind + cur_TSswap_ind)
+                plot(rootT, 'bestT', cur_ind + cur_TSswap_ind)
                 normalize_leafs(rootS, s_l)
                 normalize_leafs(rootT, t_l)
-                binarize_tree(rootS, _)
-                binarize_tree(rootT, _)
+                binarize_tree(rootS, cur_ind + cur_TSswap_ind)
+                binarize_tree(rootT, cur_ind + cur_TSswap_ind)
 
         de_binarize_tree(rootS)
         de_binarize_tree(rootT)
@@ -293,25 +299,37 @@ def heuristic(rootS, rootT, s_l, t_l, depth, hd, random_d, link):
         remove_single_child(rootT)
         rand_call += 1
         if rand_call == random_d:
-            randomly_swap_children(rootS)
-            randomly_swap_children(rootT)
+            randomly_swap_children(rootS, sigma, tau_order)
+            randomly_swap_children(rootT, sigma, tau_order)
             rand_call = 0
 
     return best
 
+# Funzione per impostare la deviazione standard
+def set_standard_dev(root, tau, tau_orders):
+    if not root.children:
+        ind = tau.index(root.value)
+        root.standard_dev = tau_orders[ind] - ind
+    else:
+        for c in root.children:
+            set_standard_dev(c, tau, tau_orders)
+        # Calcola la media della deviazione standard dei figli
+        root.standard_dev = sum(c.standard_dev for c in root.children) / len(root.children)
+
 # Funzione per scambiare casualmente i nodi figli
-def randomly_swap_children(root):
+def randomly_swap_children(root, tau, tau_orders):
     if len(root.children) > 1:
-        # Mescola casualmente la lista dei figli
-        random.shuffle(root.children)
+        # Regola le posizioni dei figli in base alla deviazione standard
+        for i, child in enumerate(root.children[:]): 
+            root.children.remove(child)
+            new_index = (i + int(child.standard_dev)) % len(root.children)
+            root.children.insert(new_index, child)
     # Applica ricorsivamente ai nodi figli
     for child in root.children:
-        randomly_swap_children(child)
+        randomly_swap_children(child, tau, tau_orders)
 
 # Funzione principale per eseguire il programma
 def main(S, T, L):
-    depth = int(input('Inserisci il numero di iterazioni: '))
-    heuristic_d = int(input('Inserisci il numero di iterazioni per l\'euristica: '))
     random_d = int(input('inserisci l\'intervallo per uscire da un minimo locale: '))
     link, s_l, t_l = set_links(S, T, L)
     rootS, rootT = Node(), Node()
@@ -328,7 +346,7 @@ def main(S, T, L):
         os.mkdir('bestT')
     plot(rootS, 'bestS', 0)  # Plot iniziale dell'albero S
     plot(rootT, 'bestT', 0)  # Plot iniziale dell'albero T
-    heuristic(rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, link)  # Avvia l'euristica per ridurre gli incroci
+    heuristic(rootS, rootT, s_l, t_l, random_d, link)  # Avvia l'euristica per ridurre gli incroci
 
 # Esempio di utilizzo della funzione main
 main(

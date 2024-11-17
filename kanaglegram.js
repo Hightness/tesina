@@ -16,6 +16,7 @@ class Node {
         Object.defineProperty(this, 'parent', { value: null, writable: true, enumerable: false });
         Node.set_id_counter(this);
         this.splitted = false;
+        this.standard_dev = 0; // Add standard_dev property
     }
     switch_children(i1, i2) {
         [this.children[i1], this.children[i2]] = [this.children[i2], this.children[i1]];
@@ -54,7 +55,6 @@ const drawConnections = links => {
 
     // Check for intersections and add red dots with numbers
     const intersections = {};
-    let tot_intersections = 0;
     for (let i = 0; i < lines.length; i++) {
         for (let j = i + 1; j < lines.length; j++) {
             const intersection = getLineIntersection(lines[i], lines[j]);
@@ -63,14 +63,17 @@ const drawConnections = links => {
                 const key = `${x_rounded},${y_rounded}`;
                 if (intersections[key] === undefined)intersections[key] = {count: 0, x: intersection.x, y: intersection.y };
                 intersections[key].count += 1;
-                tot_intersections += 1;
             }
         }
+    }
+    let tot_intersections = 0;
+    for (let key in intersections) {
+        tot_intersections += intersections[key].count === 1 ? 1 : intersections[key].count - 1;
     }
 
     Object.values(intersections).forEach(({ x, y, count }) => {
         connectionsSVG.append('circle').attr('cx', x).attr('cy', y);
-        if(count - 1 > 1)connectionsSVG.append('text').attr('class', 'circle').attr('x', x).attr('y', y).attr('dy', -2).text(count);
+        if(count - 1 > 1)connectionsSVG.append('text').attr('class', 'circle').attr('x', x).attr('y', y).attr('dy', -2).text(count - 1);
     });
     //get only the text with the Time, so split the string and get the second part
     testo = document.getElementById('crossings').innerText;
@@ -224,13 +227,28 @@ const create_tree = (root, lista) => {
     root.set_children(new_children);
 }
 
-const randomly_swap_children = root => {
+function set_standard_dev(root, tau, tau_orders) {
+    if (root.children.length === 0) {
+        const ind = tau.indexOf(root.value);
+        root.standard_dev = tau_orders[ind] - ind;
+    } else {
+        root.children.forEach(c => set_standard_dev(c, tau, tau_orders));
+        // Compute the average of children's standard_dev
+        root.standard_dev = root.children.reduce((sum, c) => sum + c.standard_dev, 0) / root.children.length;
+    }
+}
+
+function randomly_swap_children(root, tau, tau_orders) {
     if (root.children.length > 1) {
-        // Shuffle the children array
-        root.children.sort(() => Math.random() - 0.5);
+        // Adjust children's positions based on standard_dev
+        root.children.forEach((child, i) => {
+            root.children.splice(i, 1);
+            const newIndex = (i + Math.floor(child.standard_dev)) % root.children.length;
+            root.children.splice(newIndex, 0, child);
+        });
     }
     // Recursively apply to children
-    root.children.forEach(child => randomly_swap_children(child));
+    root.children.forEach(child => randomly_swap_children(child, tau, tau_orders));
 }
 
 const set_links = (S, T, L) => {
@@ -302,6 +320,7 @@ const remove_single_child = (root, max_depth) => {
     if (root.children.length === 1 && root.children[0].depth >= max_depth) {
         let child = root.children[0];
         root.value = child.value;
+        root.standard_dev = child.standard_dev;
         root.id = child.id;
         root.splitted = child.splitted;
         root.set_children(child.children);
@@ -384,10 +403,13 @@ const assign_depth = (node, current_depth = 0) => {
     }
 }
 
-const heuristic = (rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, link, best) => {
-    let bestRootS, bestRootT, rand_call = 0;
-    for (let i = 0; i < depth; i++) {
-        if (best === 0) break;
+// Rendi la funzione heuristic asincrona e aggiorna la barra di progresso durante l'esecuzione
+const heuristic = async (rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, link, best) => {
+    let rand_call = 0;
+    const totalIterations = depth * heuristic_d;
+    let currentIteration = 0;
+
+    for (let i = 0; i < depth && best > 0; i++) {
         binarize_tree(rootS, i, s_l);
         binarize_tree(rootT, i, t_l);
         for (let j = 0; j < heuristic_d; j++) {
@@ -401,18 +423,32 @@ const heuristic = (rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, link, b
             link = Object.fromEntries(Object.entries(link).map(([k, v]) => [v, k]));
             if (temp_nc < best) {
                 best = temp_nc;
-                const elapsedTime = Date.now() - startTime; // Calculate elapsed time
-                [bestRootS ,bestRootT] = [cloneTree(rootS), cloneTree(rootT)];
-                bestTrees.push({ rootS: bestRootS, rootT: bestRootT, crossings: best, links: link, time: elapsedTime});
+                const elapsedTime = Date.now() - startTime; // Calcola il tempo trascorso
+                const bestRootS = cloneTree(rootS);
+                const bestRootT = cloneTree(rootT);
+                bestTrees.push({ rootS: bestRootS, rootT: bestRootT, crossings: best, links: link, time: elapsedTime });
             }
             [s_l, t_l] = [t_l, s_l];
             [rootS, rootT] = [rootT, rootS];
+            currentIteration++;
+            updateProgressBar((currentIteration / totalIterations) * 100);
+
+            // Cede il controllo per aggiornare la UI ogni tot iterazioni
+            if (currentIteration % 50 === 0) {
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
         }
+
+        const sigma = get_linear_order(rootS);
+        const tau = get_linear_order(rootT);
+        const tau_order = get_tau_indexes(rootT, sigma, link);
+        set_standard_dev(rootT, tau, tau_order); // Call set_standard_dev
+
         de_binarize_tree(rootS);
         de_binarize_tree(rootT);
+
         if (++rand_call === random_d) {
-            randomly_swap_children(rootS);
-            randomly_swap_children(rootT);
+            randomly_swap_children(rootT, tau, tau_order); // Pass tau and tau_orders
             rand_call = 0;
         }
     }
@@ -442,8 +478,14 @@ const main = (S, T, L) => {
     plot(rootT, 'bestT', links);
     return [rootS, rootT, s_links, t_links, links, initial_crossings];
 }
+// Funzione per aggiornare la barra di progresso
+const updateProgressBar = (percentage) => {
+    const progressBar = document.getElementById('progress-bar');
+    progressBar.style.width = `${percentage}%`;
+}
 
-const startVisualization = () => {
+// Modifica la funzione startVisualization per attendere il completamento dell'euristica
+const startVisualization = async () => {
     bestTrees = [];
     currentBestIndex = 0;
     Node.id_counter = 0;
@@ -470,9 +512,11 @@ const startVisualization = () => {
          ["t14", "b6"], ["t15", "b7"], ["t16", "b8"]]
     );
 
-    // [rootS, rootT, s_links, t_links, links, initial_crossings] = main([[['a', 'b'], ['c']], [['d', 'e'], ['f', 'g']]], [[['1', '2'], ['3']], [['4', '5'], ['6', '7']]], [['a', '6'], ['b', '2'], ['f', '3'], ['d', '5'], ['f', '5'], ['f', '6'], ['g', '7']],)
-    heuristic(rootS, rootT, s_links, t_links, depth, heuristic_d, random_d, links, initial_crossings);
+    //[rootS, rootT, s_links, t_links, links, initial_crossings] = main([[['a', 'b'], ['c']], [['d', 'e'], ['f', 'g']]], [[['1', '2'], ['3']], [['4', '5'], ['6', '7']]], [['a', '6'], ['b', '2'], ['f', '3'], ['d', '5'], ['f', '5'], ['f', '6'], ['g', '7']],)
+    await heuristic(rootS, rootT, s_links, t_links, depth, heuristic_d, random_d, links, initial_crossings);
     groupTreesIntoBlock();
+    // Resetta la barra di progresso al termine
+    updateProgressBar(100);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

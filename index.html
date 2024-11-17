@@ -10,92 +10,12 @@
     <!-- Include Treant.js CSS and JS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/treant-js/1.0/Treant.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/treant-js/1.0/Treant.min.js"></script>
-    <style>
-        .circle{
-            font-size: 4px;
-            text-anchor: middle;
-            fill: black;
-        }
-        circle{ fill: red; r:1;}
-        line { stroke: green; stroke-width: 0.5; }
-        body { 
-            margin: 0; 
-            padding: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .controls { 
-            padding: 10px;
-            background: white;
-            z-index: 2;
-        }
-        /* get tree-container id*/
-        #tree-container{
-            position: relative;
-            display: inline-block;
-        }
-
-        .svg-container{
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        .visualization-container {
-            flex: 1;
-            display: flex;
-            position: relative; /* Changed to relative for SVG positioning */
-            flex-direction: column;
-            min-height: 0;  /* Important for nested flex containers */
-        }
-        .connections-svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 3; /* Increased from 1 to 3 */
-        }
-        .chart { 
-            flex: 1;
-            width: 100%;
-            overflow: hidden;
-            position: relative;
-        }
-        #crossings {
-            text-align: center;
-            font-size: large;
-            background: white;
-        }
-        .node {
-            font-size: 10px;  /* Reduced from 12px */
-        }
-        .Treant .node {
-            width: auto;
-            min-width: 10px;  /* Reduced from 40px */
-            padding: 2px;     /* Reduced from 3px */
-        }
-        .flipped { transform: rotate(180deg); }
-        
-        .leaf-node { 
-            text-align: center; 
-            font-size: 10px;
-        }
-        .internal-node{
-            font-size: 0px;
-        }
-
-        /* Add more depth-based styles as needed */
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="controls">
         <label for="depth">Depth:</label>
-        <input type="number" id="depth" value="1000">
+        <input type="number" id="depth" value="100">
         <label for="heuristic_d">Heuristic Depth:</label>
         <input type="number" id="heuristic_d" value="10">
         <label for="random_d">Random Depth:</label>
@@ -103,6 +23,9 @@
         <button onclick="startVisualization()">Start</button>
         <button onclick="showNextBestTree(-1)">Show Previous Best Tree</button>
         <button onclick="showNextBestTree(1)">Show Next Best Tree</button>
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
     </div>
     <div class="visualization-container">
         <svg class="connections-svg"></svg> <!-- Ensure SVG covers the entire container -->
@@ -111,6 +34,8 @@
     </div>
     <div id="crossings">Crossings: 0 | Time: 0 ms</div> <!-- Updated to include time -->
     <!-- Ensure kanaglegram.js is included after seedrandom -->
+</body>
     <script src="kanaglegram.js"></script>
 </body>
+</html>
 </html>
