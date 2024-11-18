@@ -46,6 +46,13 @@ const drawConnections = links => {
         nodes = document.querySelectorAll(`p.node-name`);
         const targetNode = Array.from(nodes).find(node => node.textContent.trim() === sourceId.split('_')[0]);
         const sourceNode = Array.from(nodes).find(node => node.textContent.trim() === targetId.split('_')[0]);
+
+        // Check if both sourceNode and targetNode are defined
+        if (!sourceNode || !targetNode) {
+            console.warn(`Node not found: sourceNode=${sourceNode}, targetNode=${targetNode}`);
+            continue;
+        }
+
         const [sourceRect, targetRect] = [sourceNode.getBoundingClientRect(), targetNode.getBoundingClientRect()];
         const containerRect = document.querySelector('#tree-container').getBoundingClientRect();
         const [x1, y1] = [sourceRect.left + sourceRect.width / 2 - containerRect.left, sourceRect.top + sourceRect.height / 2 - containerRect.top];
@@ -215,7 +222,7 @@ const compute_crossings = (v, tau_orders) => {
     if (v.children.length <= 1)return;
     let [crossings, crossings_switched, ltau] = crossings_on_binary_cluster(v, tau_orders);
     let rtau = tau_orders.filter(x => !ltau.includes(x) && x !== -1);
-    if (crossings_switched < crossings) {
+    if (crossings_switched <= crossings) {
         v.switch_children(0, 1);
         [ltau, rtau] = [rtau, ltau];
     }
@@ -562,21 +569,21 @@ const startVisualization = async () => {
     let rootS = new Node();
     let rootT = new Node();
     test = 0
-    // create_random_tree(rootS, depth = 4, max_children = 4);
-    // create_random_tree(rootT, depth = 4, max_children = 4);
-    // L = create_random_links(rootS, rootT, max_links = 15);
-    S = [[["t0", "t1", "t2", "t3"], ["t4", "t5", "t6"]],[["t7"]],[["t8", "t9"], ["t10", "t11"], ["t12"]],[["t13", "t14"]],[["t15", "t16"]]];
-    T = [[["b0"]],[["b1", "b2"], ["b3", "b4", "b5"], ["b6"]],[["b7", "b8"]],[["b9", "b10"], ["b11", "b12"], ["b13", "b14"]]];
-    L = [["t0", "b0"], ["t0", "b1"], ["t0", "b2"],
-         ["t1", "b1"], ["t1", "b2"], ["t2", "b1"],
-         ["t2", "b2"], ["t2", "b6"], ["t3", "b1"],
-         ["t3", "b2"], ["t3", "b6"], ["t4", "b5"],
-         ["t5", "b4"], ["t5", "b1"], ["t6", "b0"],
-         ["t7", "b0"], ["t8", "b11"], ["t8", "b12"],
-         ["t10", "b9"], ["t11", "b9"], ["t13", "b6"],
-         ["t14", "b6"], ["t15", "b7"], ["t16", "b8"]];
-    create_tree(rootS, S);
-    create_tree(rootT, T);
+    create_random_tree(rootS, depth = 4, max_children = 4);
+    create_random_tree(rootT, depth = 4, max_children = 4);
+    L = create_random_links(rootS, rootT, max_links = 15);
+    // S = [[["t0", "t1", "t2", "t3"], ["t4", "t5", "t6"]],[["t7"]],[["t8", "t9"], ["t10", "t11"], ["t12"]],[["t13", "t14"]],[["t15", "t16"]]];
+    // T = [[["b0"]],[["b1", "b2"], ["b3", "b4", "b5"], ["b6"]],[["b7", "b8"]],[["b9", "b10"], ["b11", "b12"], ["b13", "b14"]]];
+    // L = [["t0", "b0"], ["t0", "b1"], ["t0", "b2"],
+    //      ["t1", "b1"], ["t1", "b2"], ["t2", "b1"],
+    //      ["t2", "b2"], ["t2", "b6"], ["t3", "b1"],
+    //      ["t3", "b2"], ["t3", "b6"], ["t4", "b5"],
+    //      ["t5", "b4"], ["t5", "b1"], ["t6", "b0"],
+    //      ["t7", "b0"], ["t8", "b11"], ["t8", "b12"],
+    //      ["t10", "b9"], ["t11", "b9"], ["t13", "b6"],
+    //      ["t14", "b6"], ["t15", "b7"], ["t16", "b8"]];
+    //create_tree(rootS, S);
+    //create_tree(rootT, T);
     originalS = cloneTree(rootS);
     originalT = cloneTree(rootT);
     [rootS, rootT, s_links, t_links, links] = main(rootS, rootT, L);

@@ -16,6 +16,7 @@ header {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+
 header h1 {
     margin: 0;
     color: rgb(236, 223, 204); /* Light text color */
@@ -113,8 +114,8 @@ main {
 
 #crossings {
     text-align: center;
-    font-size: 20px;
-    /* make sure it covers all the width */
+    font-size: 1.4em;
+    font-weight: bold;
     width: 100%;
     background: rgb(105, 117, 101); /* Lighter background */
     padding: 10px;
@@ -124,18 +125,55 @@ main {
     color: rgb(24, 28, 20); /* Dark text color */
 }
 
+#swappedS, #swappedT{
+    text-align: center;
+    font-size: 1.4em;
+    /* make sure it covers all the width */
+    width: 100%;
+    /* even lighter background */
+    background: rgb(105, 117, 101); /* Lighter background */
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: rgb(236, 223, 204); /* Light text color */
+}
+
+.internal-node{
+    font-size: 0.8em;
+    color: rgb(236, 223, 204); /* Light text color */
+}
+.leaf-node{
+    font-size: 0.8em;
+    color: #00adb5; /* Teal progress bar */
+}
+
 .Treant .node {
-    min-width: 10px;  /* Reduced from 40px */
+    min-width: 2.3em;  /* Reduced from 40px */
     /* padding: 2px;     Reduced from 3px */
     background: rgb(60, 61, 55); /* Medium dark node background */
-    color: rgb(236, 223, 204); /* Light text color */
     border: 1px solid rgb(105, 117, 101); /* Border color */
-    border-radius: 5px; /* Rounded corners */
+    border-radius: 100%; /* Rounded corners */
     /* reduce height of nodes div */
-    height: 20px;
+    height: 2em;
     /* align center vertically */
     display: flex;
     align-items: center;
+    text-align: center;
+    justify-content: center; /* Add this to center horizontally */
+}
+
+/* Add these new styles for the node text */
+.Treant .node p {
+    margin: 0;
+    width: 100%;
+    text-align: center;
+}
+
+.Treant .node .node-name {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    display: flex;
 }
 
 path {
@@ -147,17 +185,7 @@ path {
     transform: rotate(180deg); 
 }
 
-.leaf-node { 
-    text-align: center; 
-    font-size: 10px;
-}
-
-.internal-node {
-    font-size: 10px;
-}
-
 .circle {
-    font-size: 10px;
     text-anchor: middle;
     fill: rgb(105, 117, 101); /* Circle fill color */
     r: 2;
