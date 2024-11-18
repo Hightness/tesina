@@ -1,10 +1,3 @@
-max_depth = 0;
-initial_crossings = 0;
-let bestTrees = [];
-let currentBestIndex = 0;
-let connectionsSVG;
-let startTime; // Initialize start time
-
 class Node {
     static id_counter = 0;
     static set_id_counter(node) {
@@ -34,6 +27,14 @@ class Node {
     }
 }
 
+max_depth = 0;
+initial_crossings = 0;
+let bestTrees = [];
+let currentBestIndex = 0;
+let connectionsSVG;
+let startTime; // Initialize start time
+let originalS = new Node();
+let originalT = new Node();
 const get_linear_order = V => typeof V === 'string' ? [V] : V instanceof Node ? V.children.length === 0 ? [V.value] : V.children.flatMap(get_linear_order) : V.flatMap(get_linear_order);
 
 const n_crossings = (sigma, tau_orders) => sigma.reduce((incroci, _, i) => incroci + crossings_on_node(tau_orders, i), 0) / 2;
@@ -105,7 +106,7 @@ const getLineIntersection = (line1, line2) => {
 
 const plot = (root, containerId, links) => {
     const convertToTreant = node => ({
-        text: { name: node.value !== null ? node.value : '' },
+        text: { name: node.id}, // Wrap node id in <p class="node-name">
         HTMLclass: node.children.length > 0 ? `internal-node` : `leaf-node`,
         attributes: { 'data-id': node.id },
         children: node.children.length > 0 ? node.children.map(convertToTreant) : undefined
@@ -117,30 +118,46 @@ const plot = (root, containerId, links) => {
         document.querySelector(`#${containerId}`).innerHTML = '';
 
         // Recreate treeConfig with updated dimensions
+        const number_of_leafs = get_linear_order(root).length;
         const treeConfig = {
             chart: {
                 container: `#${containerId}`,
                 connectors: { type: 'curve' },
                 node: { HTMLclass: containerId === 'bestT' ? 'flipped' : '' },
-                levelSeparation: window.innerHeight / 25,
-                siblingSeparation: window.innerWidth / 30,
-                subTeeSeparation: window.innerWidth / 30,
+                levelSeparation: window.innerHeight / (max_depth*10),
+                siblingSeparation: window.innerWidth / (number_of_leafs*5),
+                subTeeSeparation: window.innerWidth / (number_of_leafs*10),
                 rootOrientation: 'NORTH',
-                padding: window.innerHeight / 10,
+                padding: window.innerHeight / 20,
                 zoom: true
             },
             nodeStructure: convertToTreant(root)
         };
-        new Treant(treeConfig);
 
-        if (containerId === 'bestT') {
-            setTimeout(() => drawConnections(links), 500);
-        }
+        // Create a promise to handle tree rendering
+        new Promise((resolve) => {
+            const tree = new Treant(treeConfig);
+            // Wait for DOM to be updated
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    resolve(tree);
+                });
+            });
+        }).then(() => {
+            // Draw connections after tree is fully rendered
+            if (containerId === 'bestT') {
+                drawConnections(links);
+            }
+        });
     };
 
     renderTreant();
-    // Add resize event listener
-    window.addEventListener('resize', renderTreant);
+    // Add resize event listener with debouncing
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(renderTreant, 250);
+    });
 }
 
 const groupTreesIntoBlock = () => {
@@ -167,18 +184,30 @@ const showNextBestTree = (n) => {
     currentBestIndex = (currentBestIndex + n + bestTrees.length) % bestTrees.length;
     const bestTree = bestTrees[currentBestIndex];
     const links = bestTree.links;
-    de_binarize_tree(bestTree.rootS);
-    de_binarize_tree(bestTree.rootT);
+    let swappedT, swappedS;
+    if (bestTree.swapped) {
+        swappedS = printSwappednodes(bestTree.rootT, originalS);
+        swappedT = printSwappednodes(bestTree.rootS, originalT);
+    } else {
+        swappedT = printSwappednodes(bestTree.rootT, originalT);
+        swappedS = printSwappednodes(bestTree.rootS, originalS);
+    }
+
+    // Display swapped nodes information in the browser
+    document.getElementById('swappedT').innerText = `Swapped Nodes in T: ${swappedT}`;
+    document.getElementById('swappedS').innerText = `Swapped Nodes in S: ${swappedS}`;
+
     plot(bestTree.rootS, 'bestS', links);
     plot(bestTree.rootT, 'bestT', links);
     groupTreesIntoBlock();
 
     // Update crossings with time
-    testo = document.getElementById('crossings').innerText;
-    if(!testo.includes("Time:"))document.getElementById('crossings').innerText = `${testo} | Time: ${bestTree.time} ms`;
-    else {
+    let testo = document.getElementById('crossings').innerText;
+    if (!testo.includes("Time:")) {
+        document.getElementById('crossings').innerText = `${testo} | Time: ${bestTree.time} ms`;
+    } else {
         testo = testo.split("|")[0];
-        document.getElementById('crossings').innerText = `${testo} |Time: ${bestTree.time} ms`;
+        document.getElementById('crossings').innerText = `${testo} | Time: ${bestTree.time} ms`;
     }
 }
 
@@ -211,6 +240,22 @@ const binarize_tree_r = (root, seed) => {
     }
     for (let c of root.children) binarize_tree_r(c, seed);
 }
+test = 0
+const create_random_tree = (root, depth, max_children) => {
+    if (depth == 0) {
+        root.value = `${test++}`;
+        Node.set_id_counter(root);
+        return;
+    }
+    let new_children = [];
+    let n_children = Math.floor(Math.random() * max_children) + 1;
+    for (let i = 0; i < n_children; i++) {
+        let n = new Node();
+        create_random_tree(n, depth - 1, max_children);
+        new_children.push(n);
+    }
+    root.set_children(new_children);
+};
 
 const create_tree = (root, lista) => {
     if (typeof lista === 'string') {
@@ -230,7 +275,7 @@ const create_tree = (root, lista) => {
 function set_standard_dev(root, tau, tau_orders) {
     if (root.children.length === 0) {
         const ind = tau.indexOf(root.value);
-        root.standard_dev = tau_orders[ind] - ind;
+        root.standard_dev = (tau_orders[ind]+1)/tau_orders.length - (ind+1)/tau.length;
     } else {
         root.children.forEach(c => set_standard_dev(c, tau, tau_orders));
         // Compute the average of children's standard_dev
@@ -243,18 +288,24 @@ function randomly_swap_children(root, tau, tau_orders) {
         // Adjust children's positions based on standard_dev
         root.children.forEach((child, i) => {
             root.children.splice(i, 1);
-            const newIndex = (i + Math.floor(child.standard_dev)) % root.children.length;
-            root.children.splice(newIndex, 0, child);
+            if (child.standard_dev < 0) {
+                const newIndex = Math.max(0, i + Math.floor(child.standard_dev*root.children.length));
+                root.children.splice(newIndex, 0, child);
+            }else{
+                const newIndex = Math.min(root.children.length - 1, i + Math.floor(child.standard_dev*root.children.length));
+                root.children.splice(newIndex, 0, child);
+            }
         });
     }
     // Recursively apply to children
     root.children.forEach(child => randomly_swap_children(child, tau, tau_orders));
 }
 
-const set_links = (S, T, L) => {
+const set_links = (rootS, rootT, L) => {
     let s_links = {}, t_links = {};
-    for (let n of get_linear_order(S)) s_links[n] = 0;
-    for (let n of get_linear_order(T)) t_links[n] = 0;
+
+    for (let n of get_linear_order(rootS)) s_links[n] = 0;
+    for (let n of get_linear_order(rootT)) t_links[n] = 0;
     let links = {};
     for (let link of L) {
         let node_name_T = `${link[1]}_${t_links[link[1]]}`;
@@ -404,15 +455,21 @@ const assign_depth = (node, current_depth = 0) => {
 }
 
 // Rendi la funzione heuristic asincrona e aggiorna la barra di progresso durante l'esecuzione
-const heuristic = async (rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, link, best) => {
+const heuristic = async (rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, link) => {
     let rand_call = 0;
-    const totalIterations = depth * heuristic_d;
-    let currentIteration = 0;
+    swapped = false;
+    let best = Infinity;
 
-    for (let i = 0; i < depth && best > 0; i++) {
-        binarize_tree(rootS, i, s_l);
-        binarize_tree(rootT, i, t_l);
-        for (let j = 0; j < heuristic_d; j++) {
+    c_ind = p_ind = 0;
+    //for (let i = 0; i < depth && best > 0; i++) {
+    while(c_ind - p_ind < depth && best > 0) {
+        binarize_tree(rootS, c_ind, s_l);
+        binarize_tree(rootT, c_ind, t_l);
+        c_ind++;
+        cur_ind = prev_ind = 0;
+        //for (let j = 0; j < heuristic_d; j++) {
+        while (cur_ind - prev_ind < heuristic_d && best > 0) {
+            cur_ind++;
             let sigma = get_linear_order(rootS);
             let tau_order = get_tau_indexes(rootT, sigma, link);
             set_ranges_on_tree(rootS, sigma);
@@ -422,21 +479,23 @@ const heuristic = async (rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, l
             let temp_nc = n_crossings(sigma, tau_order);
             link = Object.fromEntries(Object.entries(link).map(([k, v]) => [v, k]));
             if (temp_nc < best) {
+                prev_ind = cur_ind;
+                p_ind = c_ind;
                 best = temp_nc;
                 const elapsedTime = Date.now() - startTime; // Calcola il tempo trascorso
                 const bestRootS = cloneTree(rootS);
                 const bestRootT = cloneTree(rootT);
-                bestTrees.push({ rootS: bestRootS, rootT: bestRootT, crossings: best, links: link, time: elapsedTime });
+                de_binarize_tree(bestRootS);
+                de_binarize_tree(bestRootT);
+                bestTrees.push({swapped:swapped, rootS: bestRootS, rootT: bestRootT, links: link, time: elapsedTime });
             }
             [s_l, t_l] = [t_l, s_l];
             [rootS, rootT] = [rootT, rootS];
-            currentIteration++;
-            updateProgressBar((currentIteration / totalIterations) * 100);
+            swapped = !swapped;
+            updateProgressBar((c_ind / (p_ind + depth)) * 100);
 
             // Cede il controllo per aggiornare la UI ogni tot iterazioni
-            if (currentIteration % 50 === 0) {
-                await new Promise(resolve => setTimeout(resolve, 0));
-            }
+            await new Promise(resolve => setTimeout(resolve, 0));
         }
 
         const sigma = get_linear_order(rootS);
@@ -454,26 +513,11 @@ const heuristic = async (rootS, rootT, s_l, t_l, depth, heuristic_d, random_d, l
     }
 }
 
-const main = (S, T, L) => {
-    startTime = Date.now(); // Record the start time
-    [links, s_links, t_links] = set_links(S, T, L);
-    let rootS = new Node();
-    let rootT = new Node();
-    create_tree(rootS, S);
-    create_tree(rootT, T);
+const main = (rootS, rootT, L) => {
     max_depth = get_depth(rootS);
-    binarize_tree(rootS, 0, s_links);
-    binarize_tree(rootT, 0, t_links);
-
-    sigma = get_linear_order(rootS);
-    tau_order = get_tau_indexes(rootT, sigma, links);
-
-    let initial_crossings = n_crossings(sigma, tau_order);
-    bestTrees.push({ rootS: cloneTree(rootS), rootT: cloneTree(rootT), crossings: initial_crossings, links: links , time:0});
-
-    de_binarize_tree(rootS);
-    de_binarize_tree(rootT);
-
+    [links, s_links, t_links] = set_links(rootS, rootT, L);
+    bestTrees.push({swapped:false, rootS: cloneTree(rootS), rootT: cloneTree(rootT), links: links , time:0});
+    groupTreesIntoBlock();
     plot(rootS, 'bestS', links);
     plot(rootT, 'bestT', links);
     return [rootS, rootT, s_links, t_links, links, initial_crossings];
@@ -484,45 +528,76 @@ const updateProgressBar = (percentage) => {
     progressBar.style.width = `${percentage}%`;
 }
 
+const printSwappednodes = (Broot, Oroot) => {
+    // Mapping from node ids to their positions in Broot
+    const Broot_id_to_index = {};
+    res = '';
+    Broot.children.forEach((child, index) => {
+        Broot_id_to_index[child.id] = index;
+    });
+    Oroot.children.forEach((Ochild, O_index) => {
+        const B_index = Broot_id_to_index[Ochild.id];
+        if (B_index !== O_index) {
+            if (!res.includes(`${Broot.children[B_index].id},${Broot.children[O_index].id}`))
+                res += `${Broot.children[O_index].id},${Broot.children[B_index].id} || `;
+        }
+        // Recursively check the children
+        res += printSwappednodes(Broot.children[B_index], Ochild);
+    });
+    return res
+}
+
 // Modifica la funzione startVisualization per attendere il completamento dell'euristica
 const startVisualization = async () => {
     bestTrees = [];
+    document.getElementById('swappedT').innerText = `Swapped Nodes in T: `;
+    document.getElementById('swappedS').innerText = `Swapped Nodes in S: `;
+        document.getElementById('crossings').innerText = `Crossings: | Time: 0 ms`;
     currentBestIndex = 0;
     Node.id_counter = 0;
     let depth = parseInt(document.getElementById('depth').value);
     let heuristic_d = parseInt(document.getElementById('heuristic_d').value);
     let random_d = parseInt(document.getElementById('random_d').value);
-    [rootS, rootT, s_links, t_links, links, initial_crossings] = main(
-        [[["t0", "t1", "t2", "t3"], ["t4", "t5", "t6"]],
-         [["t7"]],
-         [["t8", "t9"], ["t10", "t11"], ["t12"]],
-         [["t13", "t14"]],
-         [["t15", "t16"]]],
-        [[["b0"]],
-         [["b1", "b2"], ["b3", "b4", "b5"], ["b6"]],
-         [["b7", "b8"]],
-         [["b9", "b10"], ["b11", "b12"], ["b13", "b14"]]],
-        [["t0", "b0"], ["t0", "b1"], ["t0", "b2"],
+    startTime = Date.now(); // Record the start time
+    let rootS = new Node();
+    let rootT = new Node();
+    test = 0
+    // create_random_tree(rootS, depth = 4, max_children = 4);
+    // create_random_tree(rootT, depth = 4, max_children = 4);
+    // L = create_random_links(rootS, rootT, max_links = 15);
+    S = [[["t0", "t1", "t2", "t3"], ["t4", "t5", "t6"]],[["t7"]],[["t8", "t9"], ["t10", "t11"], ["t12"]],[["t13", "t14"]],[["t15", "t16"]]];
+    T = [[["b0"]],[["b1", "b2"], ["b3", "b4", "b5"], ["b6"]],[["b7", "b8"]],[["b9", "b10"], ["b11", "b12"], ["b13", "b14"]]];
+    L = [["t0", "b0"], ["t0", "b1"], ["t0", "b2"],
          ["t1", "b1"], ["t1", "b2"], ["t2", "b1"],
          ["t2", "b2"], ["t2", "b6"], ["t3", "b1"],
          ["t3", "b2"], ["t3", "b6"], ["t4", "b5"],
          ["t5", "b4"], ["t5", "b1"], ["t6", "b0"],
          ["t7", "b0"], ["t8", "b11"], ["t8", "b12"],
          ["t10", "b9"], ["t11", "b9"], ["t13", "b6"],
-         ["t14", "b6"], ["t15", "b7"], ["t16", "b8"]]
-    );
-
-    //[rootS, rootT, s_links, t_links, links, initial_crossings] = main([[['a', 'b'], ['c']], [['d', 'e'], ['f', 'g']]], [[['1', '2'], ['3']], [['4', '5'], ['6', '7']]], [['a', '6'], ['b', '2'], ['f', '3'], ['d', '5'], ['f', '5'], ['f', '6'], ['g', '7']],)
-    await heuristic(rootS, rootT, s_links, t_links, depth, heuristic_d, random_d, links, initial_crossings);
-    groupTreesIntoBlock();
+         ["t14", "b6"], ["t15", "b7"], ["t16", "b8"]];
+    create_tree(rootS, S);
+    create_tree(rootT, T);
+    originalS = cloneTree(rootS);
+    originalT = cloneTree(rootT);
+    [rootS, rootT, s_links, t_links, links] = main(rootS, rootT, L);
+    await heuristic(rootS, rootT, s_links, t_links, depth, heuristic_d, random_d, links);
+    //groupTreesIntoBlock();
     // Resetta la barra di progresso al termine
     updateProgressBar(100);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    connectionsSVG = d3.select('.connections-svg')
-        .attr('width', '100%')
-        .attr('height', '100%');
-    startVisualization();
-    document.getElementById('crossings').innerText = `Time: 0 ms`;
-});
+const create_random_links = (rootS, rootT, max_links) => {
+    const sNodes = get_linear_order(rootS);
+    const tNodes = get_linear_order(rootT);
+    const links = [];
+    already_seen = new Set();
+    //use function to get min of two values
+    while (links.length < Math.min(max_links, sNodes.length*tNodes.length/2)) {
+        const sNode = sNodes[Math.floor(Math.random() * sNodes.length)];
+        const tNode = tNodes[Math.floor(Math.random() * tNodes.length)];
+        if (already_seen.has(`${sNode}${tNode}`)) continue;
+        links.push([sNode, tNode]);
+        already_seen.add(`${sNode}${tNode}`);
+    }
+    return links;
+};

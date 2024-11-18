@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kanaglegram Visualization</title>
     <!-- Include D3.js library -->
     <script src="https://d3js.org/d3.v6.min.js"></script>
@@ -12,30 +13,34 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/treant-js/1.0/Treant.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <div class="controls">
-        <label for="depth">Depth:</label>
-        <input type="number" id="depth" value="100">
-        <label for="heuristic_d">Heuristic Depth:</label>
-        <input type="number" id="heuristic_d" value="10">
-        <label for="random_d">Random Depth:</label>
-        <input type="number" id="random_d" value="3">
-        <button onclick="startVisualization()">Start</button>
-        <button onclick="showNextBestTree(-1)">Show Previous Best Tree</button>
-        <button onclick="showNextBestTree(1)">Show Next Best Tree</button>
-        <div id="progress-container">
-            <div id="progress-bar"></div>
+<body class="dark-mode">
+    <header>
+        <h1>Kanaglegram Visualization</h1>
+    </header>
+    <main>
+        <div class="controls">
+            <label for="depth">Depth:</label>
+            <input type="number" id="depth" value="100">
+            <label for="heuristic_d">Heuristic Depth:</label>
+            <input type="number" id="heuristic_d" value="10">
+            <label for="random_d">Random Depth:</label>
+            <input type="number" id="random_d" value="5">
+            <button onclick="startVisualization()">Start</button>
+            <button onclick="showNextBestTree(-1)">Show Previous Best Tree</button>
+            <button onclick="showNextBestTree(1)">Show Next Best Tree</button>
+            <div id="progress-container">
+                <div id="progress-bar"></div>
+            </div>
         </div>
-    </div>
-    <div class="visualization-container">
-        <svg class="connections-svg"></svg> <!-- Ensure SVG covers the entire container -->
-        <div id="bestS" class="chart"></div>
-        <div id="bestT" class="chart flipped"></div>
-    </div>
-    <div id="crossings">Crossings: 0 | Time: 0 ms</div> <!-- Updated to include time -->
-    <!-- Ensure kanaglegram.js is included after seedrandom -->
-</body>
+        <div id="crossings">Crossings: 0 | Time: 0 ms</div>
+        <div id="swappedS">Swapped Nodes in S: </div>
+        <div id="swappedT">Swapped Nodes in T: </div>
+        <div class="visualization-container">
+            <svg class="connections-svg"></svg>
+            <div id="bestS" class="chart"></div>
+            <div id="bestT" class="chart flipped"></div>
+        </div>
+    </main>
     <script src="kanaglegram.js"></script>
 </body>
-</html>
 </html>

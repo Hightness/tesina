@@ -20,6 +20,7 @@ class Node:
     def __init__(self, value=None):
         self.value = value            # Valore del nodo (None per nodi intermedi)
         self.children = []            # Lista dei nodi figli
+        self.depth = 1
         self.parent = None            # Riferimento al nodo genitore
         Node.set_id_counter(self)     # Imposta l'id del nodo
         self.splitted = False         # Indica se il nodo è stato diviso
@@ -30,6 +31,7 @@ class Node:
         temp = self.children[i1]
         self.children[i1] = self.children[i2]
         self.children[i2] = temp
+        #print(f"swapping {self.children[i1].id} and {self.children[i2].id}")
 
     # Metodo per impostare i figli del nodo, assicurandosi che non ci siano duplicati
     def set_children(self, new_children):
@@ -41,8 +43,13 @@ class Node:
                 final_c.append(c)            # Aggiunge il figlio alla lista finale
                 if c.value is not None:
                     already_seen.add(c.value)  # Aggiunge il valore all'insieme dei valori già visti
+                c.depth = self.depth + 1
         self.children = final_c              # Aggiorna la lista dei figli
 
+
+OriginalS = Node()
+OriginalT = Node()
+max_depth = 0
 # Semplifica get_linear_order usando la list comprehension
 def get_linear_order(V):
     if isinstance(V, str):
@@ -71,6 +78,9 @@ def n_crossings(sigma, tau_orders):
         incroci += crossings_on_node(tau_orders, i)
     return incroci / 2
 
+def get_max_depth(root):
+    if len(root.children) == 0:return root.depth
+    return get_max_depth(root.children[0])
 # Funzione per contare gli incroci su un cluster binario
 def crossings_on_binary_cluster(v, tau_orders):
     r_bounds_min, r_bounds_max = v.children[1].min_bound, v.children[1].max_bound
@@ -246,15 +256,27 @@ def set_ranges_on_tree(root, order):
 
 # Semplifica la funzione remove_single_child
 def remove_single_child(root):
-    while len(root.children) == 1:
+    if len(root.children) == 1 and root.children[0].depth > max_depth:
         child = root.children[0]
         root.value, root.id, root.splitted, root.standard_dev = child.value, child.id, child.splitted, child.standard_dev
         root.set_children(child.children)
     for c in root.children:
         remove_single_child(c)
 
+def print_swapped_nodes(Broot, Oroot):
+    # Mapping from node ids to their positions in Broot
+    Broot_id_to_index = {child.id: index for index, child in enumerate(Broot.children)}
+    
+    for O_index, Ochild in enumerate(Oroot.children):
+        B_index = Broot_id_to_index.get(Ochild.id)
+        if B_index != O_index:
+            print(f'Node {Broot.children[O_index].id} swapped with node {Broot.children[B_index].id}')
+        # Recursively check the children
+        print_swapped_nodes(Broot.children[B_index], Ochild)
+
 # Semplifica la funzione heuristic
 def heuristic(rootS, rootT, s_l, t_l, random_d, link):
+    global OriginalS, OriginalT
     #initialize best to ininity
     best = np.inf
     rand_call = cur_ind = prev_ind = 0
@@ -265,7 +287,7 @@ def heuristic(rootS, rootT, s_l, t_l, random_d, link):
         binarize_tree(rootS, cur_ind)
         binarize_tree(rootT, cur_ind)
         cur_TSswap_ind = prev_TSswap_ind = 0
-        while cur_TSswap_ind - prev_TSswap_ind < 30:
+        while cur_TSswap_ind - prev_TSswap_ind < 10:
             cur_TSswap_ind += 1
             sigma = get_linear_order(rootS)
             tau_order = get_tau_indexes(rootT, sigma, link)
@@ -277,17 +299,24 @@ def heuristic(rootS, rootT, s_l, t_l, random_d, link):
             link = {v: k for k, v in link.items()}
             s_l, t_l = t_l, s_l
             rootS, rootT = rootT, rootS
+            OriginalS, OriginalT = OriginalT, OriginalS
             if temp_nc < best:
                 best = temp_nc
                 prev_ind = cur_ind
                 prev_TSswap_ind = cur_TSswap_ind
-                print(f'computation n.{cur_ind}, (best found: {best})')
+                print(f'\n\n\ncomputation n.{cur_ind}, (best found: {best})')
                 de_binarize_tree(rootS)
                 de_binarize_tree(rootT)
                 remove_single_child(rootS)
                 remove_single_child(rootT)
                 plot(rootS, 'bestS', cur_ind + cur_TSswap_ind)
                 plot(rootT, 'bestT', cur_ind + cur_TSswap_ind)
+                plot(OriginalS, 'oS', cur_ind + cur_TSswap_ind)
+                plot(OriginalT, 'oT', cur_ind + cur_TSswap_ind)
+                print('swapped nodes on s_tree:')
+                print_swapped_nodes(rootS, OriginalS)
+                print('\nswapped nodes on t_tree:')
+                print_swapped_nodes(rootT, OriginalT)
                 normalize_leafs(rootS, s_l)
                 normalize_leafs(rootT, t_l)
                 binarize_tree(rootS, cur_ind + cur_TSswap_ind)
@@ -328,13 +357,27 @@ def randomly_swap_children(root, tau, tau_orders):
     for child in root.children:
         randomly_swap_children(child, tau, tau_orders)
 
+def clone_tree(root):
+    new_root = Node()
+    new_root.value = root.value
+    new_root.id = root.id
+    new_root.splitted = root.splitted
+    new_root.standard_dev = root.standard_dev
+    new_root.children = [clone_tree(c) for c in root.children]
+    for c in new_root.children:c.parent = new_root
+    return new_root
+
 # Funzione principale per eseguire il programma
 def main(S, T, L):
+    global OriginalS, OriginalT, max_depth
     random_d = int(input('inserisci l\'intervallo per uscire da un minimo locale: '))
     link, s_l, t_l = set_links(S, T, L)
     rootS, rootT = Node(), Node()
     create_tree(rootS, S)
     create_tree(rootT, T)
+    max_depth = get_max_depth(rootS)
+    OriginalS = clone_tree(rootS)
+    OriginalT = clone_tree(rootT)
     # Rimuove i vecchi output dalle directory
     try:
         for filename in os.listdir('bestS'):os.remove(f'bestS/{filename}')
@@ -346,6 +389,8 @@ def main(S, T, L):
         os.mkdir('bestT')
     plot(rootS, 'bestS', 0)  # Plot iniziale dell'albero S
     plot(rootT, 'bestT', 0)  # Plot iniziale dell'albero T
+    plot(OriginalS, 'oS', 0)
+    plot(OriginalT, 'oT', 0)
     heuristic(rootS, rootT, s_l, t_l, random_d, link)  # Avvia l'euristica per ridurre gli incroci
 
 # Esempio di utilizzo della funzione main
