@@ -1,7 +1,7 @@
 class Node {
     static id_counter = 0;
     static set_id_counter(node) {
-        node.id = node.value === null ? `(${Node.id_counter++})` : node.value;
+        node.id = node.value === null ? Node.id_counter++ : node.value;
     }
     constructor(value = null) {
         this.value = value;
@@ -222,7 +222,7 @@ const compute_crossings = (v, tau_orders) => {
     if (v.children.length <= 1)return;
     let [crossings, crossings_switched, ltau] = crossings_on_binary_cluster(v, tau_orders);
     let rtau = tau_orders.filter(x => !ltau.includes(x) && x !== -1);
-    if (crossings_switched <= crossings) {
+    if (crossings_switched < crossings) {
         v.switch_children(0, 1);
         [ltau, rtau] = [rtau, ltau];
     }

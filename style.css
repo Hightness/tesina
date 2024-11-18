@@ -1,3 +1,7 @@
+div::-webkit-scrollbar {
+    display: none;
+}
+
 body { 
     margin: 0; 
     padding: 0;
@@ -76,7 +80,6 @@ main {
     flex-direction: row; /* Change from column to row */
     justify-content: center; /* Center horizontally */
     align-items: center; /* Center vertically */
-    overflow: hidden;       /* Prevent scrollbars */
     width: 100%; /* Ensure the container spans the full width */
 }
 
@@ -93,7 +96,6 @@ main {
 .chart { 
     flex: 1; /* Allow charts to grow equally */
     max-width: none; /* Remove maximum width restriction */
-    overflow: hidden;
     position: relative;
     padding: 0;
     margin: 0; /* Remove horizontal margins to utilize full width */
@@ -139,11 +141,11 @@ main {
 }
 
 .internal-node{
-    font-size: 0.8em;
+    font-size: 0.5em;
     color: rgb(236, 223, 204); /* Light text color */
 }
 .leaf-node{
-    font-size: 0.8em;
+    font-size: 0.5em;
     color: #00adb5; /* Teal progress bar */
 }
 
@@ -192,8 +194,8 @@ path {
 }
 
 circle {
-    fill: rgb(105, 117, 101); /* Circle fill color */
-    r: 2;
+    fill: #00adb5; /* Teal progress bar */
+    r: 1.5;
 }
 
 line {
@@ -214,16 +216,4 @@ line {
     height: 100%;
     background-color: #00adb5; /* Teal progress bar */
     border-radius: 4px;
-}
-
-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: rgb(60, 61, 55); /* Medium dark background */
-    text-align: center;
-    color: rgb(236, 223, 204); /* Light text color */
-    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
-    margin-top: auto; /* Push the footer to the bottom */
 }
