@@ -16,9 +16,27 @@ app.get('/findfirstcommonparent', (req, res) => {
 
 // Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, "public")));
+
 // Serve the HTML file
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "views", "index.html"));
+});
+
+// Endpoint per eseguire lo script Python
+app.get("/run-python", (req, res) => {
+    // Esegui lo script Python
+    exec("python3 scripts/script.py", (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Errore: ${error.message}`);
+            return res.status(500).send(`Errore: ${error.message}`);
+        }
+        if (stderr) {
+            console.error(`Stderr: ${stderr}`);
+            return res.status(500).send(`Stderr: ${stderr}`);
+        }
+        console.log(`Output: ${stdout}`);
+        res.send(`Output: ${stdout}`);
+    });
 });
 
 // Start the server
