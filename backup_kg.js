@@ -1,3 +1,4 @@
+
 // Classe che rappresenta un nodo nell'albero
 class Node {
     static id_counter = 0; // Contatore statico per assegnare ID unici ai nodi interni
@@ -14,7 +15,6 @@ class Node {
         Node.set_id_counter(this); // Imposta l'ID del nodo
         this.splitted = false; // Indica se il nodo è stato suddiviso durante la binarizzazione, utile per la de-binarizzazione
         this.standard_dev = 0; // Deviazione standard utilizzata nell'euristica per spostare i figli
-        this.parent = null; // Riferimento al nodo genitore
     }
 
     switch_children(i1, i2) {
@@ -188,11 +188,11 @@ const plot = (root, containerId, links) => {
                 container: `#${containerId}`,
                 connectors: { type: 'curve' },
                 node: { HTMLclass: containerId === 'bestT' ? 'flipped' : '' },
-                levelSeparation: window.innerHeight / (max_depth * 5),
-                siblingSeparation: window.innerWidth / (number_of_leafs * 5),
-                subTeeSeparation: window.innerWidth / (number_of_leafs * 10),
+                levelSeparation: window.innerHeight / (max_depth*10),
+                siblingSeparation: window.innerWidth / (number_of_leafs*5),
+                subTeeSeparation: window.innerWidth / (number_of_leafs*10),
                 rootOrientation: 'NORTH',
-                padding: window.innerHeight / 100, // Aumenta la distanza verticale
+                padding: window.innerHeight / 20,
                 zoom: true
             },
             nodeStructure: convertToTreant(root)
@@ -266,13 +266,8 @@ const showNextBestTree = (n) => {
     document.getElementById('swappedT').innerText = `Swapped Nodes in T: ${swappedT}`;
     document.getElementById('swappedS').innerText = `Swapped Nodes in S: ${swappedS}`;
 
-    if (bestTree.swapped) {
-        plot(bestTree.rootT, 'bestS', links);
-        plot(bestTree.rootS, 'bestT', links);
-    } else {
-        plot(bestTree.rootS, 'bestS', links);
-        plot(bestTree.rootT, 'bestT', links);
-    }
+    plot(bestTree.rootS, 'bestS', links);
+    plot(bestTree.rootT, 'bestT', links);
     groupTreesIntoBlock();
 
     // Aggiorna le intersezioni con il tempo
@@ -606,6 +601,7 @@ const heuristic = (rootS, rootT, s_l, t_l, link) => {
             link = Object.fromEntries(Object.entries(link).map(([k, v]) => [v, k]));
             swapped = !swapped;
             if (cur_ind % 10 === 0) {
+                console.log('ok');
                 updateProgressBar((c_ind / (p_ind + depth)) * 100);
             }
             // Cede il controllo per aggiornare la UI ogni tot iterazioni
@@ -704,7 +700,6 @@ const startVisualization = (new_run) => {
     //      ["t14", "b6"], ["t15", "b7"], ["t16", "b8"]];
     // create_tree(rootS, S);
     // create_tree(rootT, T);
-    console.log("first common parent of 0 and 2: ", findFirstCommonParent('s', 0, 1));
 
     max_depth = get_depth(rootS); // Calcola la profondità massima
     [links, s_links, t_links] = set_links(rootS, rootT, L); // Imposta i collegamenti
@@ -729,41 +724,4 @@ const create_random_links = (rootS, rootT, max_links) => {
         L.push([sNode, tNode]);
         already_seen.add(`${sNode}${tNode}`);
     }
-};
-
-/**
- * Funzione che, dati due nomi di nodi foglia, restituisce il primo genitore comune (il suo ID)
- * @param {Node} root - Il nodo radice dell'albero
- * @param {string} leaf1 - Nome del primo nodo foglia
- * @param {string} leaf2 - Nome del secondo nodo foglia
- * @returns {string|null} - ID del primo genitore comune o null se non trovato
- */
-const findFirstCommonParent = (tree_type, leaf1, leaf2) => {
-    root = originalS;
-    if (tree_type == 't'){root = originalT;}
-
-    const pathToLeaf = (node, leaf, path = []) => {
-        if (node.value == leaf || node.id == leaf) return [...path, node];
-        for (let child of node.children) {
-            const result = pathToLeaf(child, leaf, [...path, node]);
-            if (result) return result;
-        }
-        return null;
-    };
-
-    const path1 = pathToLeaf(root, leaf1);
-    const path2 = pathToLeaf(root, leaf2);
-
-    if (!path1 || !path2) return null;
-
-    let commonParent = null;
-    for (let i = 0; i < Math.min(path1.length, path2.length); i++) {
-        if (path1[i] === path2[i]) {
-            commonParent = path1[i];
-        } else {
-            break;
-        }
-    }
-
-    return commonParent ? commonParent.id : null;
 };

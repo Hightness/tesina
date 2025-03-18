@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanaglegram Visualization</title>
+    <!-- Include D3.js library -->
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <!-- Include Raphael.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+    <!-- Include Treant.js CSS and JS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/treant-js/1.0/Treant.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/treant-js/1.0/Treant.min.js"></script>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body class="dark-mode">
+    <header>
+        <h1>Kanaglegram Visualization</h1>
+    </header>
+    <main>
+        <div class="controls">
+            <label for="depth">Depth:</label>
+            <input type="number" id="depth" value="100">
+            <label for="heuristic_d">Heuristic Depth:</label>
+            <input type="number" id="heuristic_d" value="10">
+            <label for="random_d">Rand Depth:</label>
+            <input type="number" id="random_d" value="5">
+            <label for="tree_depth">T Depth:</label>
+            <input type="number" id="tree_depth" value="3">
+            <label for="max_children">Children:</label>
+            <input type="number" id="max_children" value="3">
+            <label for="n_connections">n links:</label>
+            <input type="number" id="n_connections" value="15">
+            <button onclick="startVisualization(true)">Start</button>
+            <button onclick="showNextBestTree(-1)">Previous T</button>
+            <button onclick="showNextBestTree(1)">Next T</button>
+            <button onclick="startVisualization(false)">reRun</button>
+            <div id="progress-container">
+                <div id="progress-bar"></div>
+            </div>
+        </div>
+        <div id="crossings">Crossings: 0 | Time: 0 ms</div>
+        <div id="swappedS">Swapped Nodes in S: </div>
+        <div id="swappedT">Swapped Nodes in T: </div>
+        <div class="visualization-container">
+            <div id="bestS" class="chart"></div>
+            <svg class="connections-svg"></svg>
+            <div id="bestT" class="chart flipped"></div>
+        </div>
+    </main>
+    <script src="/kanaglegram.js"></script>
+</body>
+</html>

@@ -743,7 +743,7 @@ const findFirstCommonParent = (tree_type, leaf1, leaf2) => {
     if (tree_type == 't'){root = originalT;}
 
     const pathToLeaf = (node, leaf, path = []) => {
-        if (node.value == leaf || node.id == leaf) return [...path, node];
+        if (node.value == leaf) return [...path, node];
         for (let child of node.children) {
             const result = pathToLeaf(child, leaf, [...path, node]);
             if (result) return result;
