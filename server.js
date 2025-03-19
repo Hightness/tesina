@@ -1,9 +1,9 @@
-
 const express = require('express');
 const path = require("path");
 const app = express();
 const port = 3000;
 const { findFirstCommonParent } = require('./public/kanaglegram');
+const { exec } = require("child_process");
 
 app.get('/findfirstcommonparent', (req, res) => {
     const { tree_type, leaf1, leaf2 } = req.query;
@@ -16,7 +16,6 @@ app.get('/findfirstcommonparent', (req, res) => {
 
 // Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, "public")));
-
 // Serve the HTML file
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "views", "index.html"));
@@ -25,7 +24,7 @@ app.get("/", (req, res) => {
 // Endpoint per eseguire lo script Python
 app.get("/run-python", (req, res) => {
     // Esegui lo script Python
-    exec("python3 scripts/script.py", (error, stdout, stderr) => {
+    exec("python scripts/gurobi_implementation.py", (error, stdout, stderr) => {
         if (error) {
             console.error(`Errore: ${error.message}`);
             return res.status(500).send(`Errore: ${error.message}`);
@@ -34,7 +33,9 @@ app.get("/run-python", (req, res) => {
             console.error(`Stderr: ${stderr}`);
             return res.status(500).send(`Stderr: ${stderr}`);
         }
-        console.log(`Output: ${stdout}`);
+        //fai regex per stout e scrivere solo la roba dopo 'Soluzione trovata:'
+        let out = stdout.split('Soluzione ottimale trovata: ')[1];
+        console.log(`Soluzione ottimale trovata: ${out}`);
         res.send(`Output: ${stdout}`);
     });
 });

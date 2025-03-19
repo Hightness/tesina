@@ -566,9 +566,11 @@ const assign_depth = (node, current_depth = 0) => {
 
 // Funzione euristica asincrona che aggiorna la barra di progresso durante l'esecuzione
 const heuristic = (rootS, rootT, s_l, t_l, link) => {
-    let depth = parseInt(document.getElementById('depth').value);
-    let heuristic_d = parseInt(document.getElementById('heuristic_d').value);
-    let random_d = parseInt(document.getElementById('random_d').value);
+    let depth, heuristic_d, random_d;
+    
+    depth = parseInt(document.getElementById('depth').value);
+    heuristic_d = parseInt(document.getElementById('heuristic_d').value);
+    random_d = parseInt(document.getElementById('random_d').value);
     let rand_call = 0;
     swapped = false;
     let best = Infinity;
@@ -628,11 +630,14 @@ const heuristic = (rootS, rootT, s_l, t_l, link) => {
 
 // Funzione per aggiornare la barra di progresso
 const updateProgressBar = (percentage) => {
+    
     const progressBar = document.getElementById('progress-bar');
-    progressBar.style.width = `${percentage}%`;
-    if (percentage === 100) {
-        showNextBestTree(0);
-        groupTreesIntoBlock();
+    if (progressBar) {
+        progressBar.style.width = `${percentage}%`;
+        if (percentage === 100) {
+            showNextBestTree(0);
+            groupTreesIntoBlock();
+        }
     }
 }
 
@@ -676,9 +681,11 @@ const startVisualization = (new_run) => {
     test = 0;
     if(new_run){
         // Se è una nuova esecuzione, crea alberi casuali e collegamenti
-        let m_c = parseInt(document.getElementById('max_children').value); // Numero massimo di figli
-        let td = parseInt(document.getElementById('tree_depth').value); // Profondità dell'albero
-        let n_connections = parseInt(document.getElementById('n_connections').value); // Numero di collegamenti
+        let m_c, td, n_connections;
+        
+        m_c = parseInt(document.getElementById('max_children').value); // Numero massimo di figli
+        td = parseInt(document.getElementById('tree_depth').value); // Profondità dell'albero
+        n_connections = parseInt(document.getElementById('n_connections').value); // Numero di collegamenti
         console.log('new run');
         create_random_tree(rootS, depth = td-1, max_children = m_c); // Crea l'albero S casuale
         create_random_tree(rootT, depth = td-1, max_children = m_c); // Crea l'albero T casuale
@@ -686,12 +693,46 @@ const startVisualization = (new_run) => {
         create_random_links(rootS, rootT, max_links = n_connections); // Crea collegamenti casuali
         originalS = cloneTree(rootS); // Clona l'albero S originale
         originalT = cloneTree(rootT); // Clona l'albero T originale
+
     } else {
         // Se si sta rielaborando, clona gli alberi originali
         console.log('rerunning..');
         rootS = cloneTree(originalS);
         rootT = cloneTree(originalT);
     }
+
+
+
+    let s_leafs = get_linear_order(rootS).length;
+    let t_leafs = get_linear_order(rootT).length;
+    let s_tree = JSON.stringify(originalS, null, 2);
+    let t_tree = JSON.stringify(originalT, null, 2);
+    let treeData = {
+        s_leafs,
+        t_leafs,
+        L,
+        s_tree,
+        t_tree
+    };
+
+    // Convert the data to a JSON string
+    let jsonString = JSON.stringify(treeData, null, 2);
+
+    // Create a Blob with the JSON data
+    let blob = new Blob([jsonString], { type: 'application/json' });
+
+    // Create a link element
+    let link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'tree_data.json'; // Name of the file to download
+
+    // Trigger the download
+    link.click();
+
+    // Clean up
+    URL.revokeObjectURL(link.href);
+        
+        // Write the data to a JSON file in the public directory
     // S = [[["t0", "t1", "t2", "t3"], ["t4", "t5", "t6"]],[["t7"]],[["t8", "t9"], ["t10", "t11"], ["t12"]],[["t13", "t14"]],[["t15", "t16"]]];
     // T = [[["b0"]],[["b1", "b2"], ["b3", "b4", "b5"], ["b6"]],[["b7", "b8"]],[["b9", "b10"], ["b11", "b12"], ["b13", "b14"]]];
     // L = [["t0", "b0"], ["t0", "b1"], ["t0", "b2"],
@@ -704,8 +745,6 @@ const startVisualization = (new_run) => {
     //      ["t14", "b6"], ["t15", "b7"], ["t16", "b8"]];
     // create_tree(rootS, S);
     // create_tree(rootT, T);
-    console.log("first common parent of 0 and 2: ", findFirstCommonParent('s', 0, 1));
-
     max_depth = get_depth(rootS); // Calcola la profondità massima
     [links, s_links, t_links] = set_links(rootS, rootT, L); // Imposta i collegamenti
 
@@ -738,18 +777,18 @@ const create_random_links = (rootS, rootT, max_links) => {
  * @param {string} leaf2 - Nome del secondo nodo foglia
  * @returns {string|null} - ID del primo genitore comune o null se non trovato
  */
-const findFirstCommonParent = (tree_type, leaf1, leaf2) => {
-    root = originalS;
-    if (tree_type == 't'){root = originalT;}
+const findFirstCommonParent = (tree, leaf1, leaf2) => {
+    root = JSON.parse(tree);
 
     const pathToLeaf = (node, leaf, path = []) => {
-        if (node.value == leaf) return [...path, node];
+        if (node.id == leaf) return [...path, node];
         for (let child of node.children) {
             const result = pathToLeaf(child, leaf, [...path, node]);
             if (result) return result;
         }
         return null;
     };
+
 
     const path1 = pathToLeaf(root, leaf1);
     const path2 = pathToLeaf(root, leaf2);
@@ -765,5 +804,26 @@ const findFirstCommonParent = (tree_type, leaf1, leaf2) => {
         }
     }
 
-    return commonParent ? commonParent.id : null;
+    return commonParent ? commonParent.value ? commonParent.value : commonParent.id : null;
+};
+
+// Export the module for Node.js
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        findFirstCommonParent,
+    };
+}
+
+const order_tree = (root, order) => {
+    // arriva alle foglie e assegna l'ordine
+    if (root.children[0].children.length === 0) {
+        //now I want you to order all children of root based on a suborder inside list order (ex 3, 4, 5)  order = [1, 6, 5, 4, 3, 2]
+        let new_children = [];
+        for (let i = 0; i < order.length; i++) {
+            let node = root.children.find(c => c.value === order[i]);
+            new_children.push(node);
+        }
+    }
+
+
 };

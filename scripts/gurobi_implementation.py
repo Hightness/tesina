@@ -1,75 +1,124 @@
 from gurobipy import Model, GRB
 import requests
-import sys
 import json
+import os
 
+# Read from JSON file instead of command line arguments
+json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'public', 'tree_data.json')
 
-s_leafs = int(sys.argv[1])
-t_leafs = int(sys.argv[2])
-edges = json.load(sys.argv[3])
+with open(json_path, 'r') as file:
+    data = json.load(file)
+    s_leafs = int(data.get('s_leafs', 10))
+    t_leafs = int(data.get('t_leafs', 10))
+    edges = data.get('L', [])
+    edges = [(int(edge[0]), int(edge[1])) for edge in edges]
+    s_tree = data.get('s_tree')
+    t_tree = data.get('t_tree')
+    print(f"Successfully loaded data: s_leafs={s_leafs}, t_leafs={t_leafs}, edges={edges}")
+    #transform all edges entries into integers
+#remove json_path file
+#os.remove(json_path)
 
 # Creazione del modello
 model = Model("Vincoli condizionali")
 
-# Aggiunta delle variabili x1, x2, ..., xn
-x1 = model.addVars(s_leafs, s_leafs, vtype=GRB.BINARY)
-for i in range(s_leafs):
-    for j in range(s_leafs):
-        x1[i,j].name = f"x1_{i}_{j}"
-        model.addConstr(x1[i,j] == (i<j))
+# Aggiunta delle variabili xs, xt, ..., xn - use name parameter directly when creating variables
+xs = model.addVars(s_leafs, s_leafs, vtype=GRB.BINARY)
 
-# Aggiunta delle variabili x1, x2, ..., xn
-x2 = model.addVars(t_leafs, t_leafs, vtype=GRB.BINARY)
-for i in range(t_leafs):
-    for j in range(t_leafs):
-        x2[i,j].name = f"x2_{i}_{j}"
-        model.addConstr(x2[i,j] == (i<j))
 
-e = model.addVars(s_leafs, t_leafs, vtype=GRB.BINARY, lb = 0, ub = 0)
+# Aggiunta delle variabili xt, y2, ..., yn
+xt = model.addVars(t_leafs, t_leafs, vtype=GRB.BINARY)
 
-for t in edges:
-    e[t[0], t[1]].lb = e[t[0], t[1]].ub = 1
-    
-#x1
-S = [[["t0", "t1", "t2", "t3"], ["t4", "t5", "t6"]],[["t7"]],[["t8", "t9"], ["t10", "t11"], ["t12"]],[["t13", "t14"]],[["t15", "t16"]]];
-#x2
-T = [[["t0", "t1", "t2", "t3"], ["t4", "t5", "t6"]],[["t7"]],[["t8", "t9"], ["t10", "t11"], ["t12"]],[["t13", "t14"]],[["t15", "t16"]]];
+e = []
+for arco in edges:e.append(f'arco_{arco[0]}_{arco[1]}')
 
 def P(i, j, tree_type):
-    # Call the JavaScript function via the API
     response = requests.get("http://localhost:3000/findfirstcommonparent", params={"tree_type": tree_type, "leaf1": i, "leaf2": j})
-    return str(response.json()["result"])
+    return str(response.json().get("commonParentId", ""))
 
-def set_order_constraint(model, x, h, length, tree_type):
-    if h >= length:return
-    for i in range(x):
-        for j in range(x[i]):
-            model.addConstr(0 <= x[h,i] + x[i,j] - x[h,j] <= 1)
-            if P(h, i, tree_type) != P(P(h, i, tree_type), j, tree_type):model.addConstr(x[h,j] == x[i,j])
-            if P(i, j, tree_type) != P(h,P(i, j, tree_type), tree_type):model.addConstr(x[h,j] == x[i,j])
-    set_order_constraint(model, x1, h+1)
+def set_order_constraint(model, x, h, start, end, tree_type):
+    if h >= end:return
+    
+    for i in range(end-start):
+        for j in range(end-start):
+            # Get parent info safely
+            if i == j or i == h or h == j: continue
+            #model.addConstr((x[h-start, i] + x[i, j] - x[h-start, j] <= 1))
+            #model.addConstr((x[h-start, i] + x[i, j] - x[h-start, j] >= 0))
+            parent_hi = P(h, i+start, tree_type)
+            parent_ij = P(i+start, j+start, tree_type)
+            #parent_hj = P(h, j+start, tree_type)
+                    
+            # Only add constraints if we have valid parent info
+            parent_of_hi_and_j = P(parent_hi, j + start, tree_type)
+            #if parent_of_hi_and_j == parent_ij:# and h-start != j and i != j:
+                #model.addConstr(x[h - start, j] == x[i, j])
+                        
+            parent_of_ij_and_h = P(parent_ij, h, tree_type)
+            #print(f'parent of {h} and {i + start}: {parent_hi}')
+            #print(f'parent of {h} and {j + start}: {parent_hj}')
+            #print(f'parent of {i + start} and {j + start}: {parent_ij}')
+            #print(f'parent of {parent_hi} and {j + start}: {parent_of_hi_and_j}')
+            #print(f'parent of {parent_ij} and {h}: {parent_of_ij_and_h}')
+            #if parent_of_ij_and_h == parent_ij:# and h-start != i and h-start != j:
+                #model.addConstr(x[h - start, i] == x[h - start, j])
+    
+    # Recursive call with proper parameters
+    set_order_constraint(model, x, h+1, start, end, tree_type)
 
-set_order_constraint(model, x1, 0, s_leafs, "s_tree")
-set_order_constraint(model, x2, 0, t_leafs, "t_tree")
+# Apply constraints safely
+print('adding constraints for xs')
+model.addConstrs((xs[h,i] + xs[i, j] - xs[h, j] <= 1 for i in range(s_leafs) for j in range(s_leafs) for h in range(s_leafs) if h != i and j != i and h != j))
+model.addConstrs((xs[h,i] + xs[i, j] - xs[h, j] >= 0 for i in range(s_leafs) for j in range(s_leafs) for h in range(s_leafs) if h != i and j != i and h != j))
+model.addConstrs((xs[i, j] + xs[j, i] == 1 for i in range(s_leafs) for j in range(s_leafs) if i != j))
+model.addConstrs((xs[i, i] == 0 for i in range(s_leafs)))
+set_order_constraint(model, xs, 0, 0, s_leafs, s_tree)
+print('adding constraints for xt')
+model.addConstrs((xt[h,i] + xt[i, j] - xt[h, j] <= 1 for i in range(t_leafs) for j in range(t_leafs) for h in range(t_leafs) if h != i and j != i and h != j))
+model.addConstrs((xt[h,i] + xt[i, j] - xt[h, j] >= 0 for i in range(t_leafs) for j in range(t_leafs) for h in range(t_leafs) if h != i and j != i and h != j))
+model.addConstrs((xt[i, j] + xt[j, i] == 1 for i in range(t_leafs) for j in range(t_leafs) if i != j))
+model.addConstrs((xt[i, i] == 0 for i in range(t_leafs)))
+set_order_constraint(model, xt, s_leafs, s_leafs, s_leafs+t_leafs, t_tree)
 
+# Create crossing variables properly
+# create dictionary c with keys i-j-k-l 
 c = model.addVars(s_leafs, s_leafs, t_leafs, t_leafs, vtype=GRB.BINARY)
+
 for i in range(s_leafs):
     for j in range(s_leafs):
         for k in range(t_leafs):
             for l in range(t_leafs):
-                c[i,j,k,l].name = f"c_{i}_{j}_{k}_{l}"
-                model.addConstr(c[i,j,k,l] == e[i,k]*e[j,l]*(x1[i,j]*(1-x2[k,l]) + x2[k,l]*(1-x1[i,j])))
+                if f'arco_{i}_{k+s_leafs}' in e and f'arco_{j}_{l+s_leafs}' in e and (i != j or k != l):
+                    model.addConstr(c[i, j, k, l] == (xs[i, j]*(1-xt[k, l]) + xt[k, l]*(1-xs[i, j])))
     
+# Set objective with proper variable access
+# sum all elements on dictionary c
+model.setObjective(sum(c[i, j, k, l] for i in range(s_leafs) for j in range(s_leafs) for k in range(t_leafs) for l in range(t_leafs) if i < j and k < l), GRB.MAXIMIZE)
 
-model.setObjective(sum(c[i, j, k, l] for i in range(s_leafs) for j in range(s_leafs) for k in range(t_leafs) for l in range(t_leafs)), GRB.MINIMIZE)
 # Ottimizzazione del modello
 model.optimize()
 
 # Stampa dei risultati
 if model.status == GRB.OPTIMAL:
-    print("Soluzione ottimale trovata:")
+    #creami lista con n zeri:
+    ordinamento_s = [i for i in range(s_leafs)]
+    print("\n\nSoluzione ottimale trovata:")
     for i in range(s_leafs):
+        posizione = 0
         for j in range(s_leafs):
-            print(f"x1_{i}_{j} = {x1[i,j]}")
+            if int(xs[i, j].X) == 1:posizione += 1
+        ordinamento_s[s_leafs-posizione-1] = i
+
+    #sortami questa lista ordinando gli indici in base al valore nella posizione ([3,2,4,1,5])
+    print("Ordinamento s:", ordinamento_s)
+
+    ordinamento_t = [i for i in range(t_leafs)]
+    for i in range(t_leafs):
+        posizione = 0
+        for j in range(t_leafs):
+            if int(xt[i, j].X) == 1:posizione += 1
+        ordinamento_t[posizione] = i+s_leafs
+
+    print("Ordinamento t:", ordinamento_t)
 else:
-    print("Nessuna soluzione ottimale trovata.")
+    print(f"Nessuna soluzione ottimale trovata. {model.Status}")
