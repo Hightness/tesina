@@ -1,11 +1,12 @@
 from gurobipy import Model, GRB
 import requests
+import sys
+import json
 
 
-s_leafs = 10
-t_leafs = 10
-#from S leafs to T leafs
-edges = [(0, 1), (0, 2), (1, 3), (1, 4), (2, 5), (2, 6), (3, 7), (3, 8), (4, 9), (4, 10)]
+s_leafs = int(sys.argv[1])
+t_leafs = int(sys.argv[2])
+edges = json.load(sys.argv[3])
 
 # Creazione del modello
 model = Model("Vincoli condizionali")
