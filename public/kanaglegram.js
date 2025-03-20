@@ -15,6 +15,8 @@ class Node {
         this.splitted = false; // Indica se il nodo è stato suddiviso durante la binarizzazione, utile per la de-binarizzazione
         this.standard_dev = 0; // Deviazione standard utilizzata nell'euristica per spostare i figli
         this.parent = null; // Riferimento al nodo genitore
+        this.min_bound = 0; // Limite inferiore per il nodo nell'ordine lineare
+        this.max_bound = Infinity; // Limite superiore per il nodo nell'ordine lineare
     }
 
     switch_children(i1, i2) {
@@ -679,6 +681,79 @@ const startVisualization = (new_run) => {
     let rootS = new Node();
     let rootT = new Node();
     test = 0;
+    
+    //check on index.html the title of the page
+    if(document.title === 'Gurobi'){
+        // Fetch tree data from JSON file
+        fetch('/tree_data.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(treeData => {
+                // Parse tree structures
+                const originalS = JSON.parse(treeData.s_tree);
+                const originalT = JSON.parse(treeData.t_tree);
+                const L = treeData.L;
+                const sOrder = treeData.s_order;
+                const tOrder = treeData.t_order;
+                        
+                // Clone the trees
+                const clonedS = new Node();
+                const clonedT = new Node();
+                        
+                // Recreate the tree structure by converting the JSON objects back to Node instances
+                const rebuildTree = (json, node) => {
+                    node.value = json.value;
+                    node.id = json.id;
+                    node.splitted = json.splitted;
+                            
+                    if (json.children && json.children.length > 0) {
+                        json.children.forEach(childJson => {
+                            const childNode = new Node();
+                            rebuildTree(childJson, childNode);
+                            childNode.parent = node;
+                            node.children.push(childNode);
+                        });
+                    }
+                };
+                        
+                rebuildTree(originalS, clonedS);
+                rebuildTree(originalT, clonedT);
+                        
+                // Set ranges on trees before ordering
+                set_ranges_on_tree(clonedS, get_linear_order(clonedS));
+                set_ranges_on_tree(clonedT, get_linear_order(clonedT));
+                        
+                // Apply the ordering to the trees
+                order_tree(clonedS, sOrder);
+                order_tree(clonedT, tOrder);
+                        
+                // Add the optimally ordered trees to the bestTrees array
+                const [links, s_links, t_links] = set_links(clonedS, clonedT, L);
+                        
+                // Add the trees to the bestTrees array with a special flag
+                bestTrees.push({
+                    swapped: false,
+                    rootS: clonedS,
+                    rootT: clonedT,
+                    links: links,
+                    time: 0,
+                    crossings: 0,
+                    isOptimal: true // Flag to identify this as the optimal solution from Gurobi
+                });
+                        
+            })
+            .catch(error => {
+                console.error('Error fetching tree data:', error);
+                alert('Failed to load tree data. See console for details.');
+            });
+            
+        return; // Skip the rest of the function when in Gurobi mode
+    }
+    
     if(new_run){
         // Se è una nuova esecuzione, crea alberi casuali e collegamenti
         let m_c, td, n_connections;
@@ -807,23 +882,43 @@ const findFirstCommonParent = (tree, leaf1, leaf2) => {
     return commonParent ? commonParent.value ? commonParent.value : commonParent.id : null;
 };
 
+const order_tree = (root, order) => {
+    // arriva alle foglie e assegna l'ordine
+    let new_children = [];
+    while(new_children.length < root.children.length){
+        let minimo = Infinity;
+        let next_index = 0;
+        for (let i = 0; i < root.children.length; i++) {
+            let ind = order.indexOf(root.children[i].min_bound);
+            if (ind < minimo && !new_children.includes(root.children[i])) {
+                minimo = ind;
+                next_index = i;
+            }
+        }
+        new_children.push(root.children[next_index]);
+    }
+    root.children = new_children;
+    root.children.forEach(c => order_tree(c, order));
+};
+
 // Export the module for Node.js
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        // Functions
         findFirstCommonParent,
+        order_tree,
+        cloneTree,
+        set_ranges_on_tree,
+        set_links,
+        showNextBestTree,
+        get_linear_order,
+        
+        // Variables
+        originalS,
+        originalT,
+        L,
+        bestTrees,
+        currentBestIndex,
+        startTime
     };
 }
-
-const order_tree = (root, order) => {
-    // arriva alle foglie e assegna l'ordine
-    if (root.children[0].children.length === 0) {
-        //now I want you to order all children of root based on a suborder inside list order (ex 3, 4, 5)  order = [1, 6, 5, 4, 3, 2]
-        let new_children = [];
-        for (let i = 0; i < order.length; i++) {
-            let node = root.children.find(c => c.value === order[i]);
-            new_children.push(node);
-        }
-    }
-
-
-};

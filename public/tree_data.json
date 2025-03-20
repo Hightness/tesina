@@ -1,0 +1,66 @@
+{
+  "s_leafs": 3,
+  "t_leafs": 7,
+  "L": [
+    [
+      "0",
+      "4"
+    ],
+    [
+      "0",
+      "7"
+    ],
+    [
+      "0",
+      "8"
+    ],
+    [
+      "2",
+      "4"
+    ],
+    [
+      "1",
+      "9"
+    ],
+    [
+      "0",
+      "3"
+    ],
+    [
+      "1",
+      "8"
+    ],
+    [
+      "2",
+      "6"
+    ],
+    [
+      "2",
+      "7"
+    ],
+    [
+      "1",
+      "7"
+    ],
+    [
+      "0",
+      "5"
+    ]
+  ],
+  "s_tree": "{\n  \"value\": null,\n  \"children\": [\n    {\n      \"value\": null,\n      \"children\": [\n        {\n          \"value\": \"0\",\n          \"children\": [],\n          \"id\": \"0\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": \"1\",\n          \"children\": [],\n          \"id\": \"1\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": \"2\",\n          \"children\": [],\n          \"id\": \"2\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        }\n      ],\n      \"id\": \"(2)\",\n      \"splitted\": false,\n      \"standard_dev\": 0,\n      \"min_bound\": 0,\n      \"max_bound\": null\n    }\n  ],\n  \"id\": \"(0)\",\n  \"splitted\": false,\n  \"standard_dev\": 0,\n  \"min_bound\": 0,\n  \"max_bound\": null\n}",
+  "t_tree": "{\n  \"value\": null,\n  \"children\": [\n    {\n      \"value\": null,\n      \"children\": [\n        {\n          \"value\": \"3\",\n          \"children\": [],\n          \"id\": \"3\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": \"4\",\n          \"children\": [],\n          \"id\": \"4\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": \"5\",\n          \"children\": [],\n          \"id\": \"5\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        }\n      ],\n      \"id\": \"(6)\",\n      \"splitted\": false,\n      \"standard_dev\": 0,\n      \"min_bound\": 0,\n      \"max_bound\": null\n    },\n    {\n      \"value\": null,\n      \"children\": [\n        {\n          \"value\": \"6\",\n          \"children\": [],\n          \"id\": \"6\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": \"7\",\n          \"children\": [],\n          \"id\": \"7\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        }\n      ],\n      \"id\": \"(10)\",\n      \"splitted\": false,\n      \"standard_dev\": 0,\n      \"min_bound\": 0,\n      \"max_bound\": null\n    },\n    {\n      \"value\": null,\n      \"children\": [\n        {\n          \"value\": \"8\",\n          \"children\": [],\n          \"id\": \"8\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": \"9\",\n          \"children\": [],\n          \"id\": \"9\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        }\n      ],\n      \"id\": \"(13)\",\n      \"splitted\": false,\n      \"standard_dev\": 0,\n      \"min_bound\": 0,\n      \"max_bound\": null\n    }\n  ],\n  \"id\": \"(1)\",\n  \"splitted\": false,\n  \"standard_dev\": 0,\n  \"min_bound\": 0,\n  \"max_bound\": null\n}",
+  "s_order": [
+    1,
+    2,
+    0
+  ],
+  "t_order": [
+    9,
+    8,
+    7,
+    6,
+    4,
+    5,
+    3
+  ]
+}
