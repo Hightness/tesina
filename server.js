@@ -4,8 +4,8 @@ const fs = require('fs'); // Add fs module to read files
 const app = express();
 const port = 3000;
 const { exec } = require("child_process");
-const kanaglegram = require('./public/kanaglegram');
-const { findFirstCommonParent, Node, set_ranges_on_tree, get_linear_order, order_tree, showNextBestTree} = kanaglegram;
+const trees = require('./public/trees');
+const { findFirstCommonParent } = trees;
 
 app.get('/findfirstcommonparent', (req, res) => {
     const { tree_type, leaf1, leaf2 } = req.query;
@@ -19,6 +19,7 @@ app.get('/findfirstcommonparent', (req, res) => {
 // Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, "public")));
 // Serve the HTML file with dynamic title
+
 app.get("/", (req, res) => {
     // Get the title from the query string or use default
     let titolo = "Kanaglegram Visualization";

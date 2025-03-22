@@ -27,9 +27,9 @@
             <label for="random_d">Rand Depth:</label>
             <input type="number" id="random_d" value="5">
             <label for="tree_depth">T Depth:</label>
-            <input type="number" id="tree_depth" value="3">
+            <input type="number" id="tree_depth" value="5">
             <label for="max_children">Children:</label>
-            <input type="number" id="max_children" value="3">
+            <input type="number" id="max_children" value="5">
             <label for="n_connections">n links:</label>
             <input type="number" id="n_connections" value="15">
             <button onclick="startVisualization(true)">Start</button>
@@ -43,12 +43,13 @@
         <div id="crossings">Crossings: 0 | Time: 0 ms</div>
         <div id="swappedS">Swapped Nodes in S: </div>
         <div id="swappedT">Swapped Nodes in T: </div>
-        <div class="visualization-container">
+        <div class="tree-container">
             <div id="bestS" class="chart"></div>
             <svg class="connections-svg"></svg>
             <div id="bestT" class="chart flipped"></div>
         </div>
     </main>
+    <script src="/trees.js"></script>
     <script src="/kanaglegram.js"></script>
 </body>
 </html>
