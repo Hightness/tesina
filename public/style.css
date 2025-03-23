@@ -92,16 +92,22 @@ main {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    /*z-index: 2; /* Ensure the SVG is above the tree */
+    /*z-index: 10; /* Higher z-index to ensure it's above everything */
 }
 
 .chart { 
-    flex: 1; /* Allow charts to grow equally */
-    max-width: none; /* Remove maximum width restriction */
+    /*flex: 0 0 auto;*/
+    flex: 1;
+    max-width: none;
+    width: 100%;
     position: relative;
-    padding: 0;
-    margin: 0; /* Remove horizontal margins to utilize full width */
-    box-sizing: border-box;  /* Include padding and border in the element's total width and height */
+    /*padding: 20px;
+    margin: 10px 0;*/
+    box-sizing: border-box;
+    min-height: 300px;
+    text-align: center; /* Center content horizontally */
+    overflow: auto;
+    scrollbar-width: thin;
 }
 
 .controls { 
@@ -217,4 +223,67 @@ line {
     height: 100%;
     background-color: #00adb5; /* Teal progress bar */
     border-radius: 4px;
+}
+
+.tree-container {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    min-height: 800px;
+    overflow: visible;
+    margin-bottom: 20px;
+    margin-top: 20px;
+    scrollbar-width: thin;
+}
+
+::-webkit-scrollbar-track {
+    background: rgb(236, 223, 204); /* Same as body background */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgb(80, 55, 35); /* Slightly lighter on hover */
+}
+
+/* Position scrollbars for each tree */
+#bestS {
+    /* Top tree - normal orientation with scrollbar at top */
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin-bottom: 20px;
+}
+
+/* Apply special styling to make the scrollbar appear at the top for bestS */
+#bestS::-webkit-scrollbar {
+    position: absolute;
+    top: 0;
+}
+
+#bestT {
+    /* Bottom tree - already flipped by the 'flipped' class in HTML */
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin-top: 20px;
+}
+
+/* Remove the transform styling that was flipping the trees */
+#bestS, #bestS .Treant {
+    transform: none;
+}
+
+/* For both trees, ensure content is properly centered */
+#bestS .Treant, #bestT .Treant {
+    margin: 0 auto;
+}
+
+/* Custom scrollbar positioning for Firefox */
+@supports (scrollbar-width: thin) {
+    #bestS, #bestT {
+        scrollbar-width: thin;
+        scrollbar-color: #00adb5 rgb(236, 223, 204);
+        scroll-behavior: smooth;
+    }
 }

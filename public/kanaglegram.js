@@ -4,29 +4,120 @@ let startTime; // Tempo di inizio dell'algoritmo
 
 // Initialize D3 selection after DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize SVG
     connectionsSVG = d3.select('.connections-svg');
     console.log("Connection SVG initialized:", connectionsSVG.node());
+    
+    // Function to update SVG positioning and dimensions
+    function updateSVGPosition() {
+        const treeContainer = document.querySelector('.tree-container');
+        if (!treeContainer) return;
+        
+        // Reset SVG attributes
+        connectionsSVG
+            .attr('width', treeContainer.offsetWidth)
+            .attr('height', treeContainer.offsetHeight)
+            .style('position', 'absolute')
+            .style('top', '0')
+            .style('left', '0');
+            
+        // If trees are visible, redraw connections
+        if (bestTrees.length > 0) {
+            drawConnections(bestTrees[currentBestIndex].links);
+        }
+    }
+    
+    // Update the SVG position initially and whenever relevant events occur
+    updateSVGPosition();
+    window.addEventListener('resize', updateSVGPosition);
+    
+    // Handle scroll events on any relevant container
+    const containers = [
+        document.querySelector('.tree-container'),
+        document.getElementById('bestS'),
+        document.getElementById('bestT')
+    ];
+    
+    // Debounce function to avoid excessive redraws
+    let scrollTimeout;
+    const handleScroll = () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            updateSVGPosition();
+        }, 5);
+    };
+    
+    // Add scroll listeners
+    containers.forEach(container => {
+        if (container) {
+            container.addEventListener('scroll', handleScroll);
+        }
+    });
+    
+    // Also redraw on window scroll
+    window.addEventListener('scroll', handleScroll);
+    
+    // Add a listener for after the trees are rendered
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.addedNodes.length) {
+                centerTreeInContainer('bestS');
+                centerTreeInContainer('bestT');
+            }
+        });
+    });
+    
+    // Start observing the tree containers
+    const config = { childList: true, subtree: true };
+    observer.observe(document.querySelector('.tree-container'), config);
 });
 
 const drawConnections = links => {
-    // Disegna le connessioni tra i nodi foglia degli alberi S e T
+    console.log("Drawing connections:", links);
+    
+    // Clear existing connections
     connectionsSVG.selectAll('*').remove();
+    
+    // Get the tree container for positioning reference
+    const treeContainer = document.querySelector('.tree-container');
+    const containerRect = treeContainer.getBoundingClientRect();
+    
+    // Find all node-name elements
+    const nodes = document.querySelectorAll('p.node-name');
+    console.log("Found nodes:", nodes.length);
+    
     const lines = [];
-    for ([sourceId, targetId] of Object.entries(links)) {
-        nodes = document.querySelectorAll(`p.node-name`);
-        const targetNode = Array.from(nodes).find(node => node.textContent.trim() === sourceId.split('_')[0]);
+    
+    // Draw connections between nodes
+    for (const [sourceId, targetId] of Object.entries(links)) {
         const sourceNode = Array.from(nodes).find(node => node.textContent.trim() === targetId.split('_')[0]);
-        //console.log(sourceId, targetId, sourceNode, targetNode);
-
-        if (sourceNode && targetNode){
-            const [sourceRect, targetRect] = [sourceNode.getBoundingClientRect(), targetNode.getBoundingClientRect()];
-            const [x1, y1] = [sourceRect.left + sourceRect.width / 2, sourceRect.top + sourceRect.height / 2];
-            const [x2, y2] = [targetRect.left + targetRect.width / 2, targetRect.top + targetRect.height / 2];
+        const targetNode = Array.from(nodes).find(node => node.textContent.trim() === sourceId.split('_')[0]);
+        
+        if (sourceNode && targetNode) {
+            const sourceRect = sourceNode.getBoundingClientRect();
+            const targetRect = targetNode.getBoundingClientRect();
+            
+            // Calculate line coordinates relative to the SVG
+            const x1 = sourceRect.left + sourceRect.width / 2 - containerRect.left;
+            const y1 = sourceRect.top + sourceRect.height / 2 - containerRect.top;
+            const x2 = targetRect.left + targetRect.width / 2 - containerRect.left;
+            const y2 = targetRect.top + targetRect.height / 2 - containerRect.top;
+            
+            console.log(`Drawing line from ${sourceId} to ${targetId}: (${x1},${y1}) to (${x2},${y2})`);
+            
+            // Draw the line
+            connectionsSVG.append('line')
+                .attr('x1', x1)
+                .attr('y1', y1)
+                .attr('x2', x2)
+                .attr('y2', y2)
+                .attr('stroke', 'rgb(105, 117, 101)')
+                .attr('stroke-width', 1.5);
+                
             lines.push({ x1, y1, x2, y2, sourceId, targetId });
-            connectionsSVG.append('line').attr('x1', x1).attr('y1', y1).attr('x2', x2).attr('y2', y2);
         }
     }
-
+    
     // Verifica le intersezioni e aggiunge punti rossi con numeri
     const intersections = {};
     for (let i = 0; i < lines.length; i++) {
@@ -95,65 +186,85 @@ const plot = (root, containerId, links) => {
 
         // Ricrea treeConfig con dimensioni aggiornate
         const number_of_leafs = get_linear_order(root).length;
+        
+        // Calculate spacing based on the number of leaf nodes
+        const levelSep = 50;
+        const siblingSep = Math.max(20, window.innerWidth / (number_of_leafs * 4));
+        const subTreeSep = Math.max(10, window.innerWidth / (number_of_leafs * 6));
+        
         const treeConfig = {
             chart: {
                 container: `#${containerId}`,
-                connectors: { type: 'curve' },
-                node: { HTMLclass: containerId === 'bestT' ? 'flipped' : '' },
-                levelSeparation: window.innerHeight / (max_depth * 5),
-                siblingSeparation: window.innerWidth / (number_of_leafs * 5) + 20, // Add extra spacing
-                subTeeSeparation: window.innerWidth / (number_of_leafs * 10) + 20, // Add extra spacing
-                rootOrientation: 'NORTH',
-                padding: window.innerHeight / 100,
-                zoom: true,
-                scrollbar: 'native', // Change to native for better browser scrollbar support
-                nodeAlign: 'CENTER', // Center the nodes
-                connectors: {
+                connectors: { 
                     type: 'curve',
                     style: {
                         'stroke-width': 2,
                         'stroke': 'rgb(105, 117, 101)'
                     }
-                }
+                },
+                node: { 
+                    HTMLclass: containerId === 'bestT' ? 'flipped' : '' 
+                },
+                levelSeparation: levelSep,
+                siblingSeparation: siblingSep,
+                subTeeSeparation: subTreeSep,
+                rootOrientation: 'NORTH',
+                padding: 20,
+                zoom: true,
+                scrollbar: 'native',
+                nodeAlign: 'CENTER',
+                animation: { nodeSpeed: 300, connectorsSpeed: 300 }
             },
             nodeStructure: convertToTreant(root)
         };
 
         // Crea una promessa per gestire il rendering dell'albero
         //console.log('rendering');
-        new Promise((resolve) => {
-            const tree = new Treant(treeConfig);
-            // Attende che il DOM venga aggiornato
-            requestAnimationFrame(() => {
-                    setTimeout(() => resolve(tree), 100);
-            });
-        }).then(() => {
-            // Disegna le connessioni dopo che l'albero è stato completamente renderizzato
-            if (containerId === 'bestT') {
-                drawConnections(links);
+        return new Promise((resolve) => {
+            try {
+                const tree = new Treant(treeConfig);
+                // Wait longer for trees to fully render
+                setTimeout(() => resolve(tree), 200);
+            } catch (error) {
+                console.error(`Error rendering tree in ${containerId}:`, error);
+                resolve(null);
             }
         });
     };
-    renderTreant();
-
-    let treeContainers = document.querySelectorAll('.chart');
-    treeContainers.forEach(container => {
-        container.scrollLeft = -container.scrollWidth / 2;
-    });
+    
+    return renderTreant(); // Return the promise
 }
 
-// After the tree is drawn, ensure it's properly positioned
-//window.addEventListener('treantLoaded', function() {
-    // Make sure all trees are visible by scrolling to center
-    //const treeContainers = document.querySelectorAll('.chart');
-    //treeContainers.forEach(container => {
-        //if (container.scrollWidth > container.clientWidth) {
-            //container.scrollLeft = (container.scrollWidth - container.clientWidth) / 2;
-        //}
-    //});
-//});
+// Function to center trees in their containers
+function centerTreeInContainer(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    // Find the actual tree content within the container
+    const treeContent = container.querySelector('.Treant');
+    if (!treeContent) return;
+    
+    // Calculate centering position
+    const contentWidth = treeContent.scrollWidth;
+    const containerWidth = container.clientWidth;
+    
+    // If content is wider than container, center it
+    if (contentWidth > containerWidth) {
+        const scrollAmount = (contentWidth - containerWidth) / 2;
+        container.scrollLeft = scrollAmount;
+    }
+    
+    // For vertical centering if needed
+    const contentHeight = treeContent.scrollHeight;
+    const containerHeight = container.clientHeight;
+    
+    if (contentHeight > containerHeight) {
+        const scrollAmount = (contentHeight - containerHeight) / 2;
+        container.scrollTop = scrollAmount;
+    }
+}
 
-const showNextBestTree = (n) => {
+const showNextBestTree = async (n) => {
     // Mostra l'albero migliore successivo o precedente
     if (bestTrees.length === 0) {
         alert('No best trees found yet.');
@@ -168,13 +279,9 @@ const showNextBestTree = (n) => {
     if (bestTree.swapped) {
         swappedS = printSwappednodes(bestTree.rootT, originalS);
         swappedT = printSwappednodes(bestTree.rootS, originalT);
-        plot(bestTree.rootT, 'bestS', links);
-        plot(bestTree.rootS, 'bestT', links);
     } else {
         swappedT = printSwappednodes(bestTree.rootT, originalT);
         swappedS = printSwappednodes(bestTree.rootS, originalS);
-        plot(bestTree.rootS, 'bestS', links);
-        plot(bestTree.rootT, 'bestT', links);
     }
 
     // Visualizza le informazioni sui nodi scambiati nel browser
@@ -189,6 +296,38 @@ const showNextBestTree = (n) => {
         testo = testo.split("|")[0];
         document.getElementById('crossings').innerText = `${testo} | Time: ${bestTree.time} ms`;
     }
+
+    let plotPromises = [];
+    
+    // Plot both trees
+    if (bestTree.swapped) {
+        plotPromises.push(plot(bestTree.rootT, 'bestS', links));
+        plotPromises.push(plot(bestTree.rootS, 'bestT', links));
+    } else {
+        plotPromises.push(plot(bestTree.rootS, 'bestS', links));
+        plotPromises.push(plot(bestTree.rootT, 'bestT', links));
+    }
+    
+    // Wait for both trees to be plotted
+    await Promise.all(plotPromises);
+    
+    // Center trees in their containers
+    centerTreeInContainer('bestS');
+    centerTreeInContainer('bestT');
+    
+    // Update the SVG position and draw connections
+    setTimeout(() => {
+        // Ensure our SVG is correctly positioned
+        const treeContainer = document.querySelector('.tree-container');
+        if (treeContainer) {
+            connectionsSVG
+                .attr('width', treeContainer.offsetWidth)
+                .attr('height', treeContainer.offsetHeight);
+        }
+        
+        // Draw the connections
+        drawConnections(links);
+    }, 500);
 }
 
 // Funzione euristica asincrona che aggiorna la barra di progresso durante l'esecuzione
@@ -331,7 +470,6 @@ const startVisualization = (new_run) => {
                     links: links,
                     time: 0,
                     crossings: 0,
-                    isOptimal: true // Flag to identify this as the optimal solution from Gurobi
                 });
                         
             })
