@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- the title is passed from node server:-->
-    <title> esempio titolo </title>
+    <title> anaglegram Visualization</title>
     <!-- Include D3.js library -->
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <!-- Include Raphael.js library -->
@@ -27,15 +27,16 @@
             <label for="random_d">Rand Depth:</label>
             <input type="number" id="random_d" value="5">
             <label for="tree_depth">T Depth:</label>
-            <input type="number" id="tree_depth" value="5">
+            <input type="number" id="tree_depth" value="4">
             <label for="max_children">Children:</label>
-            <input type="number" id="max_children" value="5">
+            <input type="number" id="max_children" value="4">
             <label for="n_connections">n links:</label>
-            <input type="number" id="n_connections" value="15">
+            <input type="number" id="n_connections" value="25">
             <button onclick="startVisualization(true)">Start</button>
             <button onclick="showNextBestTree(-1)">Previous T</button>
             <button onclick="showNextBestTree(1)">Next T</button>
             <button onclick="startVisualization(false)">reRun</button>
+            <button id="runGurobiBtn">Run Optimization</button>
             <div id="progress-container">
                 <div id="progress-bar"></div>
             </div>

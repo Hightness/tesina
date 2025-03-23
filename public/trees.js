@@ -293,7 +293,6 @@ const order_tree = (root, order) => {
         let next_index = 0;
         for (let i = 0; i < root.children.length; i++) {
             let ind = order.indexOf(root.children[i].min_bound);
-            //console.log(ind, root.children[i].min_bound, order);
             if (ind < minimo && !new_children.includes(root.children[i])) {
                 minimo = ind;
                 next_index = i;
@@ -301,7 +300,6 @@ const order_tree = (root, order) => {
         }
         new_children.push(root.children[next_index]);
     }
-    console.log(root.children, new_children);
     root.children = new_children;
     root.children.forEach(c => order_tree(c, order));
 }

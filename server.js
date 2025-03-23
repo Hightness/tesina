@@ -1,10 +1,9 @@
 const express = require('express');
-const path = require("path");
 const fs = require('fs'); // Add fs module to read files
+const { exec } = require("child_process");
+const path = require("path");
 const app = express();
 const port = 3000;
-const { exec } = require("child_process");
-const trees = require('./public/trees');
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -14,30 +13,12 @@ app.use(express.static(path.join(__dirname, "public")));
 // Serve the HTML file with dynamic title
 
 app.get("/", (req, res) => {
-    // Get the title from the query string or use default
-    let titolo = "Kanaglegram Visualization";
-    if (req.query.titolo) {
-        titolo = req.query.titolo;
-    }
-    
-    // Read the HTML file
     const htmlFilePath = path.join(__dirname, "views", "index.html");
-    fs.readFile(htmlFilePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error("Error reading HTML file:", err);
-            return res.status(500).send("Error reading HTML file");
-        }
-        
-        // Replace title placeholder with actual title
-        const modifiedHTML = data.replace('<title> esempio titolo </title>', `<title>${titolo}</title>`);
-        
-        // Send the modified HTML
-        res.send(modifiedHTML);
-    });
+    res.sendFile(htmlFilePath);
 });
 
 // Endpoint per eseguire lo script Python e riordinare gli alberi
-app.get("/run-python", (req, res) => {
+app.post("/run-gurobi", (req, res) => {
     // Esegui lo script Python
     exec("python scripts/gurobi_implementation.py", (error, stdout, stderr) => {
         if (error) {
@@ -61,19 +42,7 @@ app.get("/run-python", (req, res) => {
                 
                 console.log('Extracted S order:', sOrder);
                 console.log('Extracted T order:', tOrder);
-
-                // save the orderings on the tree_data file
-                const tree_data = fs.readFileSync('public/tree_data.json');
-                const tree_data_json = JSON.parse(tree_data);
-
-                tree_data_json.s_order = sOrder;
-                tree_data_json.t_order = tOrder;
-
-                fs.writeFileSync('public/tree_data.json', JSON.stringify(tree_data_json, null, 2));
-
-                // Redirect to home with Gurobi title
-                res.redirect('/?titolo=Gurobi');
-                
+                res.json({ sOrder, tOrder });
             } else {
                 console.error('Could not extract ordering from output');
                 res.send(`Output format not recognized. Raw output:<br><pre>${stdout}</pre>`);

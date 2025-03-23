@@ -1,11 +1,75 @@
 let connectionsSVG; // SVG per le connessioni tra i nodi
 let startTime; // Tempo di inizio dell'algoritmo
+let sOrder, tOrder;
+
+// Add these helper functions near the top of the file
+// Update the disableAllButtons function to be more robust and add visual feedback
+function disableAllButtons() {
+  document.querySelectorAll('button, .btn, input[type="button"]').forEach(btn => {
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'not-allowed';
+  });
+}
+
+// Update the enableAllButtons function similarly
+function enableAllButtons() {
+  document.querySelectorAll('button, .btn, input[type="button"]').forEach(btn => {
+    btn.disabled = false;
+    btn.style.opacity = '';
+    btn.style.cursor = '';
+  });
+}
+
+document.getElementById('runGurobiBtn').addEventListener('click', async () => {
+  try {
+    disableAllButtons(); // Disable all buttons during processing
+    
+    const response = await fetch('/run-gurobi', {
+      method: 'POST'
+    });
+      
+    if (!response.ok) {
+      throw new Error(`HTTP error ${response.status}`);
+    }
+      
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      console.error("Response is not JSON:", await response.text());
+      throw new Error("Response is not JSON");
+    }
+
+    const result = await response.json();
+    if (!result.sOrder || !result.tOrder) {
+      console.error("Orders not found in response:", result);
+      throw new Error("Orders not found in response");
+    }
+
+    sOrder = result.sOrder;
+    tOrder = result.tOrder;
+    
+    // Change button color to green to indicate success
+    const button = document.getElementById('runGurobiBtn');
+    const originalColor = button.style.backgroundColor;
+    button.style.backgroundColor = "green";
+    
+    // Add timer to change button color back after 2 seconds
+    setTimeout(() => {
+      button.style.backgroundColor = originalColor;
+    }, 500);
+
+  } catch (error) {
+    console.error('Error running optimization:', error);
+    alert(`Error running optimization: ${error.message}`);
+  } finally {
+    enableAllButtons(); // Re-enable all buttons
+  }
+});
 
 // Initialize D3 selection after DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize SVG
     connectionsSVG = d3.select('.connections-svg');
-    console.log("Connection SVG initialized:", connectionsSVG.node());
     
     // Function to update SVG positioning and dimensions
     function updateSVGPosition() {
@@ -128,17 +192,11 @@ const drawConnections = links => {
 
     Object.values(intersections).forEach(({ x, y, count }) => {
         connectionsSVG.append('circle').attr('cx', x).attr('cy', y);
-        if(count - 1 > 1)connectionsSVG.append('text').attr('class', 'circle').attr('x', x).attr('y', y).attr('dy', -2).text(count - 1);
+        //if(count - 1 > 1)connectionsSVG.append('text').attr('class', 'circle').attr('x', x).attr('y', y).attr('dy', -2).text(count - 1);
     });
 
-    // Ottiene solo il testo con il tempo, quindi divide la stringa e ottiene la seconda parte
-    let testo = document.getElementById('crossings').innerText;
-    if (!testo.includes("Crossings:")) {
-        document.getElementById('crossings').innerText = `Crossings: ${bestTrees[currentBestIndex].crossings} | ${testo}`;
-    } else {
-        testo = testo.split("|")[1];
-        document.getElementById('crossings').innerText = `Crossings: ${bestTrees[currentBestIndex].crossings} | ${testo}`;
-    }
+    document.getElementById('crossings').innerText = `Crossings: ${bestTrees[currentBestIndex].crossings} | Time: ${bestTrees[currentBestIndex].time} ms`;
+    if (bestTrees[currentBestIndex].time === -1) {document.getElementById('crossings').innerText = `Crossings: ${bestTrees[currentBestIndex].crossings} | Optimal Solution`;}
 }
 
 const getLineIntersection = (line1, line2) => {
@@ -213,7 +271,6 @@ const plot = (root, containerId, links) => {
         };
 
         // Crea una promessa per gestire il rendering dell'albero
-        //console.log('rendering');
         return new Promise((resolve) => {
             try {
                 const tree = new Treant(treeConfig);
@@ -260,6 +317,34 @@ function centerTreeInContainer(containerId) {
 
 const showNextBestTree = async (n) => {
     // Mostra l'albero migliore successivo o precedente
+    if (sOrder && sOrder.length != 0 && tOrder && tOrder.length != 0){
+
+        let clonedS = cloneTree(originalS);
+        let clonedT = cloneTree(originalT);
+    
+        set_ranges_on_tree(clonedS);
+        set_ranges_on_tree(clonedT);
+
+        order_tree(clonedS, sOrder);
+        order_tree(clonedT, tOrder);
+
+        sOrder = tOrder = null;
+
+        let sigma = get_linear_order(clonedS);
+        const [links, s_links, t_links] = set_links(clonedS, clonedT, L);
+        let tau_order = get_tau_indexes(clonedT, sigma, links);
+        let ncrossings = n_crossings(sigma, tau_order);
+
+        bestTrees.push({
+            swapped: false,
+            rootS: clonedS,
+            rootT: clonedT,
+            links: links,
+            time: -1,
+            crossings: ncrossings,
+        });
+    }
+
     if (bestTrees.length === 0) {
         alert('No best trees found yet.');
         return;
@@ -270,38 +355,24 @@ const showNextBestTree = async (n) => {
     const bestTree = bestTrees[currentBestIndex];
     const links = bestTree.links;
     let swappedT, swappedS;
+    let plotPromises = [];
+
     if (bestTree.swapped) {
         swappedS = printSwappednodes(bestTree.rootT, originalS);
         swappedT = printSwappednodes(bestTree.rootS, originalT);
-    } else {
-        swappedT = printSwappednodes(bestTree.rootT, originalT);
-        swappedS = printSwappednodes(bestTree.rootS, originalS);
-    }
-
-    // Visualizza le informazioni sui nodi scambiati nel browser
-    document.getElementById('swappedT').innerText = `Swapped Nodes in T: ${swappedT}`;
-    document.getElementById('swappedS').innerText = `Swapped Nodes in S: ${swappedS}`;
-    
-    // Aggiorna le intersezioni con il tempo
-    let testo = document.getElementById('crossings').innerText;
-    if (!testo.includes("Time:")) {
-        document.getElementById('crossings').innerText = `${testo} | Time: ${bestTree.time} ms`;
-    } else {
-        testo = testo.split("|")[0];
-        document.getElementById('crossings').innerText = `${testo} | Time: ${bestTree.time} ms`;
-    }
-
-    let plotPromises = [];
-    
-    // Plot both trees
-    if (bestTree.swapped) {
         plotPromises.push(plot(bestTree.rootT, 'bestS', links));
         plotPromises.push(plot(bestTree.rootS, 'bestT', links));
     } else {
+        swappedT = printSwappednodes(bestTree.rootT, originalT);
+        swappedS = printSwappednodes(bestTree.rootS, originalS);
         plotPromises.push(plot(bestTree.rootS, 'bestS', links));
         plotPromises.push(plot(bestTree.rootT, 'bestT', links));
     }
     
+    // Visualizza le informazioni sui nodi scambiati nel browser
+    document.getElementById('swappedT').innerText = `Swapped Nodes in T: ${swappedT}`;
+    document.getElementById('swappedS').innerText = `Swapped Nodes in S: ${swappedS}`;
+
     // Wait for both trees to be plotted
     await Promise.all(plotPromises);
     
@@ -321,7 +392,7 @@ const showNextBestTree = async (n) => {
         
         // Draw the connections
         drawConnections(links);
-    }, 500);
+    }, 50);
 }
 
 // Funzione euristica asincrona che aggiorna la barra di progresso durante l'esecuzione
@@ -384,107 +455,6 @@ const heuristic = (rootS, rootT, s_l, t_l, link) => {
         // de_binarize_tree(rootT);
     }
 }
-//make the function async
-const load_data = async () => {
-    try {
-        const response = await fetch('/tree_data.json');
-        if (!response.ok) {
-            throw new Error('Network response was not ok: ' + response.statusText);
-        }
-        
-        const treeData = await response.json();
-        
-        // Parse tree structures
-        const parsedS = JSON.parse(treeData.s_tree);
-        const parsedT = JSON.parse(treeData.t_tree);
-        const L = treeData.L || [];
-        const sOrder = treeData.s_order;
-        const tOrder = treeData.t_order;
-                    
-        // Clone the trees
-        const clonedS = new Node();
-        const clonedT = new Node();
-                    
-        // Recreate the tree structure
-        rebuildTree(parsedS, clonedS);
-        rebuildTree(parsedT, clonedT);
-
-        set_ranges_on_tree(clonedS);
-        set_ranges_on_tree(clonedT);
-        
-        order_tree(clonedS, sOrder);
-        order_tree(clonedT, tOrder);
-        
-        // Verify the new ordering
-        console.log("Reordered S leaves:", get_linear_order(clonedS));
-        console.log("Reordered T leaves:", get_linear_order(clonedT));
-        
-        // Add the optimally ordered trees to the bestTrees array
-        const [links, s_links, t_links] = set_links(clonedS, clonedT, L);
-                    
-        // Calculate crossings
-        let sigma = get_linear_order(clonedS);
-        let tau_order = get_tau_indexes(clonedT, sigma, links);
-        let ncrossings = n_crossings(sigma, tau_order);
-
-        bestTrees.push({
-            swapped: false,
-            rootS: clonedS,
-            rootT: clonedT,
-            links: links,
-            time: 0,
-            crossings: ncrossings,
-        });
-        
-        console.log("Data loaded successfully, bestTrees length:", bestTrees.length);
-        return true; // Return success
-    } catch (error) {
-        console.error('Error fetching tree data:', error);
-        alert('Failed to load tree data. See console for details.');
-        return false; // Return failure
-    }
-}
-
-// Helper function to apply leaf ordering based on mapping
-function applyLeafOrdering(root, orderMap, isTreeT = false) {
-    if (!root || !orderMap) return;
-    
-    // If this is a leaf node, nothing to reorder
-    if (root.children.length === 0) return;
-    
-    // Sort children based on their order
-    root.children.sort((a, b) => {
-        // Get the leaf value from each subtree
-        const aLeaf = getFirstLeaf(a);
-        const bLeaf = getFirstLeaf(b);
-        
-        // If we're dealing with T tree
-        if (isTreeT) {
-            // Get the order values from the map, defaulting to a high value if not found
-            const aOrder = orderMap[aLeaf] !== undefined ? orderMap[aLeaf] : Infinity;
-            const bOrder = orderMap[bLeaf] !== undefined ? orderMap[bLeaf] : Infinity;
-            
-            return aOrder - bOrder;
-        } else {
-            // Normal S tree ordering
-            const aOrder = orderMap[aLeaf] !== undefined ? orderMap[aLeaf] : Infinity;
-            const bOrder = orderMap[bLeaf] !== undefined ? orderMap[bLeaf] : Infinity;
-            
-            return aOrder - bOrder;
-        }
-    });
-    
-    // Apply ordering recursively, passing along the isTreeT flag
-    root.children.forEach(child => applyLeafOrdering(child, orderMap, isTreeT));
-}
-
-// Helper function to get the first leaf of a subtree
-function getFirstLeaf(node) {
-    if (node.children.length === 0) {
-        return node.id; // changed from node.value to node.id
-    }
-    return getFirstLeaf(node.children[0]);
-}
 
 // Funzione per iniziare la visualizzazione e attendere il completamento dell'euristica
 const startVisualization = async (new_run) => {
@@ -499,34 +469,17 @@ const startVisualization = async (new_run) => {
     currentBestIndex = 0;
     Node.id_counter = 0;
     startTime = Date.now(); // Registra il tempo di inizio
-    
-    //check on index.html the title of the page
-    if(document.title === 'Gurobi'){
-        console.log('Loading data for Gurobi visualization...');
-        // Wait for data to load
-        const success = await load_data();
-        
-        // Only proceed if data loaded successfully and we have trees
-        if (success && bestTrees.length > 0) {
-            console.log('Data loaded successfully, showing trees...');
-            showNextBestTree(0);
-        } else {
-            console.error('Failed to load necessary data for Gurobi visualization');
-        }
-        return; // Exit the function early
-    }
-    
-    // Regular initialization for non-Gurobi case
+
     let rootS = new Node();
     let rootT = new Node();
     test = 0;
-    
+        
     if(new_run){
         // Se è una nuova esecuzione, crea alberi casuali e collegamenti
         console.log('new run');
         let m_c, td, n_connections;
         L = [];
-        
+            
         m_c = parseInt(document.getElementById('max_children').value); // Numero massimo di figli
         td = parseInt(document.getElementById('tree_depth').value); // Profondità dell'albero
         n_connections = parseInt(document.getElementById('n_connections').value); // Numero di collegamenti
@@ -537,44 +490,6 @@ const startVisualization = async (new_run) => {
 
         originalS = cloneTree(rootS); // Clona l'albero S originale
         originalT = cloneTree(rootT); // Clona l'albero T originale
-
-        // After creating trees and links
-        let s_leafs = get_linear_order(rootS).length;
-        let t_leafs = get_linear_order(rootT).length;
-        let s_tree = JSON.stringify(originalS, null, 2);
-        let t_tree = JSON.stringify(originalT, null, 2);
-        let treeData = {
-            s_leafs,
-            t_leafs,
-            L,
-            s_tree,
-            t_tree
-        };
-
-        // Convert the data to a JSON string
-        let jsonString = JSON.stringify(treeData, null, 2);
-
-        // Fix: Properly format the POST request with error handling
-        fetch('/save_data', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: jsonString
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok: ' + response.statusText);
-            }
-            return response.text();
-        })
-        .then(data => {
-            console.log('Data saved successfully:', data);
-        })
-        .catch(error => {
-            console.error('Error saving data:', error);
-        });
-
     } else {
         // Se si sta rielaborando, clona gli alberi originali
         console.log('rerunning..');
@@ -607,21 +522,6 @@ const startVisualization = async (new_run) => {
     })
     console.log('Data saved to tree_data.json');
 
-    // Create a Blob with the JSON data
-    //let blob = new Blob([jsonString], { type: 'application/json' });
-
-    // Create a link element
-    //let link = document.createElement('a');
-    //link.href = URL.createObjectURL(blob);
-    //link.download = 'tree_data.json'; // Name of the file to download
-
-    // Trigger the download
-    //link.click();
-
-    // Clean up
-    //URL.revokeObjectURL(link.href);
-        
-        // Write the data to a JSON file in the public directory
     // S = [[["t0", "t1", "t2", "t3"], ["t4", "t5", "t6"]],[["t7"]],[["t8", "t9"], ["t10", "t11"], ["t12"]],[["t13", "t14"]],[["t15", "t16"]]];
     // T = [[["b0"]],[["b1", "b2"], ["b3", "b4", "b5"], ["b6"]],[["b7", "b8"]],[["b9", "b10"], ["b11", "b12"], ["b13", "b14"]]];
     // L = [["t0", "b0"], ["t0", "b1"], ["t0", "b2"],
@@ -634,6 +534,7 @@ const startVisualization = async (new_run) => {
     //      ["t14", "b6"], ["t15", "b7"], ["t16", "b8"]];
     // create_tree(rootS, S);
     // create_tree(rootT, T);
+
     max_depth = get_depth(rootS); // Calcola la profondità massima
     [links, s_links, t_links] = set_links(rootS, rootT, L); // Imposta i collegamenti
 
@@ -641,13 +542,4 @@ const startVisualization = async (new_run) => {
     binarize_tree(rootT, 0, t_links); // Binarizza l'albero T
     heuristic(rootS, rootT, s_links, t_links, links); // Esegue l'algoritmo euristico
     showNextBestTree(0);
-}
-
-// Export the module for Node.js
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        // Functions
-        showNextBestTree,
-        startVisualization
-    };
 }
