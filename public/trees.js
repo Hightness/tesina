@@ -120,16 +120,22 @@ const de_binarize_tree_r = root => {
 const set_ranges_on_tree = (root) => {
     // Imposta i limiti minimo e massimo per ogni nodo nell'albero
     if (root.children.length === 0) {
-        root.min_bound = root.max_bound = root.value;
+        // For leaf nodes, set min and max to the index in the provided order
+        root.min_bound = root.max_bound = parseInt(root.value);
     } else if (root.children.length === 1) {
+        // For nodes with one child, inherit bounds from child
         set_ranges_on_tree(root.children[0]);
         root.max_bound = root.children[0].max_bound;
         root.min_bound = root.children[0].min_bound;
     } else {
-        set_ranges_on_tree(root.children[0]);
-        set_ranges_on_tree(root.children[1]);
-        root.max_bound = Math.max(root.children[1].max_bound, root.children[0].max_bound);
-        root.min_bound = Math.min(root.children[1].min_bound, root.children[0].min_bound);
+        // For internal nodes, calculate bounds from children
+        for (const child of root.children) {
+            set_ranges_on_tree(child);
+        }
+        // min_bound is the minimum of all children's min_bounds
+        root.min_bound = Math.min(...root.children.map(c => c.min_bound));
+        // max_bound is the maximum of all children's max_bounds
+        root.max_bound = Math.max(...root.children.map(c => c.max_bound));
     }
 }
 
@@ -287,7 +293,7 @@ const order_tree = (root, order) => {
         let next_index = 0;
         for (let i = 0; i < root.children.length; i++) {
             let ind = order.indexOf(root.children[i].min_bound);
-            console.log(root.id, root.children[i].min_bound, ind, order);
+            //console.log(ind, root.children[i].min_bound, order);
             if (ind < minimo && !new_children.includes(root.children[i])) {
                 minimo = ind;
                 next_index = i;
@@ -295,9 +301,10 @@ const order_tree = (root, order) => {
         }
         new_children.push(root.children[next_index]);
     }
+    console.log(root.children, new_children);
     root.children = new_children;
     root.children.forEach(c => order_tree(c, order));
-};
+}
 
 const compute_crossings = (v, tau_orders) => {
     // Calcola le intersezioni per un nodo binarizzato

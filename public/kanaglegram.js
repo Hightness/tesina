@@ -136,7 +136,7 @@ const drawConnections = links => {
     if (!testo.includes("Crossings:")) {
         document.getElementById('crossings').innerText = `Crossings: ${bestTrees[currentBestIndex].crossings} | ${testo}`;
     } else {
-        testo = testo.split("|")[0];
+        testo = testo.split("|")[1];
         document.getElementById('crossings').innerText = `Crossings: ${bestTrees[currentBestIndex].crossings} | ${testo}`;
     }
 }
@@ -397,7 +397,7 @@ const load_data = async () => {
         // Parse tree structures
         const parsedS = JSON.parse(treeData.s_tree);
         const parsedT = JSON.parse(treeData.t_tree);
-        const L = treeData.L;
+        const L = treeData.L || [];
         const sOrder = treeData.s_order;
         const tOrder = treeData.t_order;
                     
@@ -405,43 +405,24 @@ const load_data = async () => {
         const clonedS = new Node();
         const clonedT = new Node();
                     
-        // Recreate the tree structure by converting the JSON objects back to Node instances
-        const rebuildTree = (json, node) => {
-            node.value = json.value;
-            node.id = json.id;
-            node.splitted = json.splitted;
-                        
-            if (json.children && json.children.length > 0) {
-                json.children.forEach(childJson => {
-                    const childNode = new Node();
-                    rebuildTree(childJson, childNode);
-                    childNode.parent = node;
-                    node.children.push(childNode);
-                });
-            }
-        };
-                    
+        // Recreate the tree structure
         rebuildTree(parsedS, clonedS);
         rebuildTree(parsedT, clonedT);
-                    
-        // Set ranges on trees before ordering
-        console.log(get_linear_order(clonedS));
-        console.log(get_linear_order(clonedT));
 
         set_ranges_on_tree(clonedS);
         set_ranges_on_tree(clonedT);
-                    
-        // Apply the ordering to the trees
+        
         order_tree(clonedS, sOrder);
         order_tree(clonedT, tOrder);
-                    
-        console.log(get_linear_order(clonedS));
-        console.log(get_linear_order(clonedT));
-
+        
+        // Verify the new ordering
+        console.log("Reordered S leaves:", get_linear_order(clonedS));
+        console.log("Reordered T leaves:", get_linear_order(clonedT));
+        
         // Add the optimally ordered trees to the bestTrees array
         const [links, s_links, t_links] = set_links(clonedS, clonedT, L);
                     
-        // Add the trees to the bestTrees array with a special flag
+        // Calculate crossings
         let sigma = get_linear_order(clonedS);
         let tau_order = get_tau_indexes(clonedT, sigma, links);
         let ncrossings = n_crossings(sigma, tau_order);
@@ -462,6 +443,47 @@ const load_data = async () => {
         alert('Failed to load tree data. See console for details.');
         return false; // Return failure
     }
+}
+
+// Helper function to apply leaf ordering based on mapping
+function applyLeafOrdering(root, orderMap, isTreeT = false) {
+    if (!root || !orderMap) return;
+    
+    // If this is a leaf node, nothing to reorder
+    if (root.children.length === 0) return;
+    
+    // Sort children based on their order
+    root.children.sort((a, b) => {
+        // Get the leaf value from each subtree
+        const aLeaf = getFirstLeaf(a);
+        const bLeaf = getFirstLeaf(b);
+        
+        // If we're dealing with T tree
+        if (isTreeT) {
+            // Get the order values from the map, defaulting to a high value if not found
+            const aOrder = orderMap[aLeaf] !== undefined ? orderMap[aLeaf] : Infinity;
+            const bOrder = orderMap[bLeaf] !== undefined ? orderMap[bLeaf] : Infinity;
+            
+            return aOrder - bOrder;
+        } else {
+            // Normal S tree ordering
+            const aOrder = orderMap[aLeaf] !== undefined ? orderMap[aLeaf] : Infinity;
+            const bOrder = orderMap[bLeaf] !== undefined ? orderMap[bLeaf] : Infinity;
+            
+            return aOrder - bOrder;
+        }
+    });
+    
+    // Apply ordering recursively, passing along the isTreeT flag
+    root.children.forEach(child => applyLeafOrdering(child, orderMap, isTreeT));
+}
+
+// Helper function to get the first leaf of a subtree
+function getFirstLeaf(node) {
+    if (node.children.length === 0) {
+        return node.id; // changed from node.value to node.id
+    }
+    return getFirstLeaf(node.children[0]);
 }
 
 // Funzione per iniziare la visualizzazione e attendere il completamento dell'euristica

@@ -1,5 +1,4 @@
 from gurobipy import Model, GRB
-import requests
 import json
 import os
 
@@ -80,52 +79,26 @@ def find_first_common_parent(tree_json, leaf1, leaf2):
 
 def P(i, j, tree_type):
     common_parent = find_first_common_parent(tree_type, i, j)
-    print(common_parent)
     return str(common_parent or "")
-
-def set_order_constraint(model, x, h, start, end, tree_type):
-    if h >= end:return
-    
-    for i in range(end-start):
-        for j in range(end-start):
-            # Get parent info safely
-            if i == j or i == h or h == j: continue
-            #model.addConstr((x[h-start, i] + x[i, j] - x[h-start, j] <= 1))
-            #model.addConstr((x[h-start, i] + x[i, j] - x[h-start, j] >= 0))
-            parent_hi = P(h, i+start, tree_type)
-            parent_ij = P(i+start, j+start, tree_type)
-            #parent_hj = P(h, j+start, tree_type)
-                    
-            # Only add constraints if we have valid parent info
-            parent_of_hi_and_j = P(parent_hi, j + start, tree_type)
-            #if parent_of_hi_and_j == parent_ij:# and h-start != j and i != j:
-                #model.addConstr(x[h - start, j] == x[i, j])
-                        
-            parent_of_ij_and_h = P(parent_ij, h, tree_type)
-            #print(f'parent of {h} and {i + start}: {parent_hi}')
-            #print(f'parent of {h} and {j + start}: {parent_hj}')
-            #print(f'parent of {i + start} and {j + start}: {parent_ij}')
-            #print(f'parent of {parent_hi} and {j + start}: {parent_of_hi_and_j}')
-            #print(f'parent of {parent_ij} and {h}: {parent_of_ij_and_h}')
-            #if parent_of_ij_and_h == parent_ij:# and h-start != i and h-start != j:
-                #model.addConstr(x[h - start, i] == x[h - start, j])
-    
-    # Recursive call with proper parameters
-    set_order_constraint(model, x, h+1, start, end, tree_type)
 
 # Apply constraints safely
 print('adding constraints for xs')
-model.addConstrs((xs[h,i] + xs[i, j] - xs[h, j] <= 1 for i in range(s_leafs) for j in range(s_leafs) for h in range(s_leafs) if h != i and j != i and h != j))
-model.addConstrs((xs[h,i] + xs[i, j] - xs[h, j] >= 0 for i in range(s_leafs) for j in range(s_leafs) for h in range(s_leafs) if h != i and j != i and h != j))
+model.addConstrs((xs[h,i] + xs[i, j] - xs[h, j] <= 1 for h in range(s_leafs) for i in range(h+1, s_leafs) for j in range(i+1, s_leafs)))
+model.addConstrs((xs[h,i] + xs[i, j] - xs[h, j] >= 0 for h in range(s_leafs) for i in range(h+1, s_leafs) for j in range(i+1, s_leafs)))
 model.addConstrs((xs[i, j] + xs[j, i] == 1 for i in range(s_leafs) for j in range(s_leafs) if i != j))
 model.addConstrs((xs[i, i] == 0 for i in range(s_leafs)))
-set_order_constraint(model, xs, 0, 0, s_leafs, s_tree)
+
+model.addConstrs((xs[h, j] == xs[i, j] for h in range(s_leafs) for i in range(h+1, s_leafs) for j in range(i+1, s_leafs) if P(h, i, s_tree) != P(P(h, i, s_tree), j, s_tree)))
+model.addConstrs((xs[h, i] == xs[h, j] for h in range(s_leafs) for i in range(h+1, s_leafs) for j in range(i+1, s_leafs) if P(i, j, s_tree) != P(h, P(i, j, s_tree), s_tree)))
+
 print('adding constraints for xt')
-model.addConstrs((xt[h,i] + xt[i, j] - xt[h, j] <= 1 for i in range(t_leafs) for j in range(t_leafs) for h in range(t_leafs) if h != i and j != i and h != j))
-model.addConstrs((xt[h,i] + xt[i, j] - xt[h, j] >= 0 for i in range(t_leafs) for j in range(t_leafs) for h in range(t_leafs) if h != i and j != i and h != j))
+model.addConstrs((xt[h,i] + xt[i, j] - xt[h, j] <= 1 for h in range(t_leafs) for i in range(h+1, t_leafs) for j in range(i+1, t_leafs)))
+model.addConstrs((xt[h,i] + xt[i, j] - xt[h, j] >= 0 for h in range(t_leafs) for i in range(h+1, t_leafs) for j in range(i+1, t_leafs)))
 model.addConstrs((xt[i, j] + xt[j, i] == 1 for i in range(t_leafs) for j in range(t_leafs) if i != j))
 model.addConstrs((xt[i, i] == 0 for i in range(t_leafs)))
-set_order_constraint(model, xt, s_leafs, s_leafs, s_leafs+t_leafs, t_tree)
+
+model.addConstrs((xt[h, j] == xt[i, j] for h in range(t_leafs) for i in range(h+1, t_leafs) for j in range(i+1, t_leafs) if P(h+s_leafs, i+s_leafs, t_tree) != P(P(h+s_leafs, i+s_leafs, t_tree), j+s_leafs, t_tree)))
+model.addConstrs((xt[h, i] == xt[h, j] for h in range(t_leafs) for i in range(h+1, t_leafs) for j in range(i+1, t_leafs) if P(i+s_leafs, j+s_leafs, t_tree) != P(h+s_leafs, P(i+s_leafs, j+s_leafs, t_tree), t_tree)))
 
 # Create crossing variables properly
 # create dictionary c with keys i-j-k-l 
@@ -135,12 +108,12 @@ for i in range(s_leafs):
     for j in range(s_leafs):
         for k in range(t_leafs):
             for l in range(t_leafs):
-                if f'arco_{i}_{k+s_leafs}' in e and f'arco_{j}_{l+s_leafs}' in e and (i != j or k != l):
+                if f'arco_{i}_{k+s_leafs}' in e and f'arco_{j}_{l+s_leafs}' in e and i != j and k != l:
                     model.addConstr(c[i, j, k, l] == (xs[i, j]*(1-xt[k, l]) + xt[k, l]*(1-xs[i, j])))
     
 # Set objective with proper variable access
 # sum all elements on dictionary c
-model.setObjective(sum(c[i, j, k, l] for i in range(s_leafs) for j in range(s_leafs) for k in range(t_leafs) for l in range(t_leafs) if i < j and k < l), GRB.MAXIMIZE)
+model.setObjective(sum(c[i, j, k, l] for i in range(s_leafs) for j in range(s_leafs) for k in range(t_leafs) for l in range(t_leafs)), GRB.MINIMIZE)
 
 # Ottimizzazione del modello
 model.optimize()
