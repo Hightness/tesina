@@ -5,16 +5,9 @@ const app = express();
 const port = 3000;
 const { exec } = require("child_process");
 const trees = require('./public/trees');
-const { findFirstCommonParent } = trees;
 
-app.get('/findfirstcommonparent', (req, res) => {
-    const { tree_type, leaf1, leaf2 } = req.query;
-    if (!tree_type || !leaf1 || !leaf2) {
-        return res.status(400).send('Missing required query parameters: tree_type, leaf1, leaf2');
-    }
-    const result = findFirstCommonParent(tree_type, leaf1, leaf2);
-    res.json({ commonParentId: result });
-});
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, "public")));
@@ -90,6 +83,29 @@ app.get("/run-python", (req, res) => {
             res.send(`Error processing Python output: ${parseError.message}<br><pre>${stdout}</pre>`);
         }
     });
+});
+
+// Update the endpoint to handle POST requests properly
+app.post('/save_data', (req, res) => {
+    try {
+        // Log to debug
+        console.log('Received POST request to /save_data');
+        
+        // The data is already available in req.body due to express.json() middleware
+        const treeData = req.body;
+        
+        // Save to file
+        fs.writeFileSync(
+            path.join(__dirname, 'public', 'tree_data.json'), 
+            JSON.stringify(treeData, null, 2)
+        );
+        
+        console.log('Data saved to tree_data.json');
+        res.status(200).send('Data saved successfully');
+    } catch (error) {
+        console.error('Error saving data:', error);
+        res.status(500).send('Error saving data: ' + error.message);
+    }
 });
 
 // Start the server

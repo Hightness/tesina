@@ -117,18 +117,19 @@ const de_binarize_tree_r = root => {
     }
 }
 
-const set_ranges_on_tree = (root, order) => {
+const set_ranges_on_tree = (root) => {
     // Imposta i limiti minimo e massimo per ogni nodo nell'albero
     if (root.children.length === 0) {
-        root.min_bound = root.max_bound = order.indexOf(root.value);
+        root.min_bound = root.max_bound = root.value;
     } else if (root.children.length === 1) {
-        set_ranges_on_tree(root.children[0], order);
-        root.max_bound = root.min_bound = root.children[0].max_bound
-    } else {
-        set_ranges_on_tree(root.children[0], order);
-        set_ranges_on_tree(root.children[1], order);
-        root.max_bound = root.children[1].max_bound;
+        set_ranges_on_tree(root.children[0]);
+        root.max_bound = root.children[0].max_bound;
         root.min_bound = root.children[0].min_bound;
+    } else {
+        set_ranges_on_tree(root.children[0]);
+        set_ranges_on_tree(root.children[1]);
+        root.max_bound = Math.max(root.children[1].max_bound, root.children[0].max_bound);
+        root.min_bound = Math.min(root.children[1].min_bound, root.children[0].min_bound);
     }
 }
 
@@ -286,6 +287,7 @@ const order_tree = (root, order) => {
         let next_index = 0;
         for (let i = 0; i < root.children.length; i++) {
             let ind = order.indexOf(root.children[i].min_bound);
+            console.log(root.id, root.children[i].min_bound, ind, order);
             if (ind < minimo && !new_children.includes(root.children[i])) {
                 minimo = ind;
                 next_index = i;
@@ -445,36 +447,6 @@ const printSwappednodes = (Broot, Oroot) => {
     return res
 }
 
-const findFirstCommonParent = (tree, leaf1, leaf2) => {
-    root = JSON.parse(tree);
-
-    const pathToLeaf = (node, leaf, path = []) => {
-        if (node.id == leaf) return [...path, node];
-        for (let child of node.children) {
-            const result = pathToLeaf(child, leaf, [...path, node]);
-            if (result) return result;
-        }
-        return null;
-    };
-
-
-    const path1 = pathToLeaf(root, leaf1);
-    const path2 = pathToLeaf(root, leaf2);
-
-    if (!path1 || !path2) return null;
-
-    let commonParent = null;
-    for (let i = 0; i < Math.min(path1.length, path2.length); i++) {
-        if (path1[i] === path2[i]) {
-            commonParent = path1[i];
-        } else {
-            break;
-        }
-    }
-
-    return commonParent ? commonParent.value ? commonParent.value : commonParent.id : null;
-};
-
 // Export the functions for use in other files
 if (typeof module !== 'undefined' && module.exports) {
     // For Node.js environment
@@ -485,7 +457,6 @@ if (typeof module !== 'undefined' && module.exports) {
         set_standard_dev,
         randomly_swap_children,
         set_links,
-        findFirstCommonParent,
         get_tau_indexes,
         crossings_on_binary_cluster,
         order_tree,
@@ -519,7 +490,6 @@ if (typeof module !== 'undefined' && module.exports) {
     // For browser environment
     window.TreeFunctions = {
         binarize_tree,
-        findFirstCommonParent,
         get_linear_order,
         binarize_tree_r,
         create_random_tree,

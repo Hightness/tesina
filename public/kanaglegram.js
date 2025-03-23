@@ -1,4 +1,3 @@
-// Variabili globali utilizzate nel programma
 let connectionsSVG; // SVG per le connessioni tra i nodi
 let startTime; // Tempo di inizio dell'algoritmo
 
@@ -73,8 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 const drawConnections = links => {
-    console.log("Drawing connections:", links);
-    
     // Clear existing connections
     connectionsSVG.selectAll('*').remove();
     
@@ -84,7 +81,6 @@ const drawConnections = links => {
     
     // Find all node-name elements
     const nodes = document.querySelectorAll('p.node-name');
-    console.log("Found nodes:", nodes.length);
     
     const lines = [];
     
@@ -102,8 +98,6 @@ const drawConnections = links => {
             const y1 = sourceRect.top + sourceRect.height / 2 - containerRect.top;
             const x2 = targetRect.left + targetRect.width / 2 - containerRect.left;
             const y2 = targetRect.top + targetRect.height / 2 - containerRect.top;
-            
-            console.log(`Drawing line from ${sourceId} to ${targetId}: (${x1},${y1}) to (${x2},${y2})`);
             
             // Draw the line
             connectionsSVG.append('line')
@@ -224,7 +218,7 @@ const plot = (root, containerId, links) => {
             try {
                 const tree = new Treant(treeConfig);
                 // Wait longer for trees to fully render
-                setTimeout(() => resolve(tree), 200);
+                setTimeout(() => resolve(tree), 100);
             } catch (error) {
                 console.error(`Error rendering tree in ${containerId}:`, error);
                 resolve(null);
@@ -353,7 +347,7 @@ const heuristic = (rootS, rootT, s_l, t_l, link) => {
             cur_ind++;
             let sigma = get_linear_order(rootS);
             let tau_order = get_tau_indexes(rootT, sigma, link);
-            set_ranges_on_tree(rootS, sigma);
+            set_ranges_on_tree(rootS);
             compute_crossings(rootS, tau_order);
             let bestRootS = cloneTree(rootS);
             let bestRootT = cloneTree(rootT);
@@ -390,14 +384,91 @@ const heuristic = (rootS, rootT, s_l, t_l, link) => {
         // de_binarize_tree(rootT);
     }
 }
+//make the function async
+const load_data = async () => {
+    try {
+        const response = await fetch('/tree_data.json');
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.statusText);
+        }
+        
+        const treeData = await response.json();
+        
+        // Parse tree structures
+        const parsedS = JSON.parse(treeData.s_tree);
+        const parsedT = JSON.parse(treeData.t_tree);
+        const L = treeData.L;
+        const sOrder = treeData.s_order;
+        const tOrder = treeData.t_order;
+                    
+        // Clone the trees
+        const clonedS = new Node();
+        const clonedT = new Node();
+                    
+        // Recreate the tree structure by converting the JSON objects back to Node instances
+        const rebuildTree = (json, node) => {
+            node.value = json.value;
+            node.id = json.id;
+            node.splitted = json.splitted;
+                        
+            if (json.children && json.children.length > 0) {
+                json.children.forEach(childJson => {
+                    const childNode = new Node();
+                    rebuildTree(childJson, childNode);
+                    childNode.parent = node;
+                    node.children.push(childNode);
+                });
+            }
+        };
+                    
+        rebuildTree(parsedS, clonedS);
+        rebuildTree(parsedT, clonedT);
+                    
+        // Set ranges on trees before ordering
+        console.log(get_linear_order(clonedS));
+        console.log(get_linear_order(clonedT));
+
+        set_ranges_on_tree(clonedS);
+        set_ranges_on_tree(clonedT);
+                    
+        // Apply the ordering to the trees
+        order_tree(clonedS, sOrder);
+        order_tree(clonedT, tOrder);
+                    
+        console.log(get_linear_order(clonedS));
+        console.log(get_linear_order(clonedT));
+
+        // Add the optimally ordered trees to the bestTrees array
+        const [links, s_links, t_links] = set_links(clonedS, clonedT, L);
+                    
+        // Add the trees to the bestTrees array with a special flag
+        let sigma = get_linear_order(clonedS);
+        let tau_order = get_tau_indexes(clonedT, sigma, links);
+        let ncrossings = n_crossings(sigma, tau_order);
+
+        bestTrees.push({
+            swapped: false,
+            rootS: clonedS,
+            rootT: clonedT,
+            links: links,
+            time: 0,
+            crossings: ncrossings,
+        });
+        
+        console.log("Data loaded successfully, bestTrees length:", bestTrees.length);
+        return true; // Return success
+    } catch (error) {
+        console.error('Error fetching tree data:', error);
+        alert('Failed to load tree data. See console for details.');
+        return false; // Return failure
+    }
+}
 
 // Funzione per iniziare la visualizzazione e attendere il completamento dell'euristica
-const startVisualization = (new_run) => {
-
+const startVisualization = async (new_run) => {
     // Inizializza variabili e pulisce lo schermo
     bestTrees = [];
     if(connectionsSVG) connectionsSVG.selectAll('*').remove();
-    console.clear();
     document.getElementById('bestS').innerHTML = '';
     document.getElementById('bestT').innerHTML = '';
     document.getElementById('swappedT').innerText = `Swapped Nodes in T: `;
@@ -406,80 +477,27 @@ const startVisualization = (new_run) => {
     currentBestIndex = 0;
     Node.id_counter = 0;
     startTime = Date.now(); // Registra il tempo di inizio
-    let rootS = new Node();
-    let rootT = new Node();
-    test = 0;
     
     //check on index.html the title of the page
     if(document.title === 'Gurobi'){
-        //Fetch tree data from JSON file
-        fetch('/tree_data.json')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok: ' + response.statusText);
-                }
-                return response.json();
-            })
-            .then(treeData => {
-                // Parse tree structures
-                const originalS = JSON.parse(treeData.s_tree);
-                const originalT = JSON.parse(treeData.t_tree);
-                const L = treeData.L;
-                const sOrder = treeData.s_order;
-                const tOrder = treeData.t_order;
-                        
-                // Clone the trees
-                const clonedS = new Node();
-                const clonedT = new Node();
-                        
-                // Recreate the tree structure by converting the JSON objects back to Node instances
-                const rebuildTree = (json, node) => {
-                    node.value = json.value;
-                    node.id = json.id;
-                    node.splitted = json.splitted;
-                            
-                    if (json.children && json.children.length > 0) {
-                        json.children.forEach(childJson => {
-                            const childNode = new Node();
-                            rebuildTree(childJson, childNode);
-                            childNode.parent = node;
-                            node.children.push(childNode);
-                        });
-                    }
-                };
-                        
-                rebuildTree(originalS, clonedS);
-                rebuildTree(originalT, clonedT);
-                        
-                // Set ranges on trees before ordering
-                set_ranges_on_tree(clonedS, get_linear_order(clonedS));
-                set_ranges_on_tree(clonedT, get_linear_order(clonedT));
-                        
-                // Apply the ordering to the trees
-                order_tree(clonedS, sOrder);
-                order_tree(clonedT, tOrder);
-                        
-                // Add the optimally ordered trees to the bestTrees array
-                const [links, s_links, t_links] = set_links(clonedS, clonedT, L);
-                        
-                // Add the trees to the bestTrees array with a special flag
-                bestTrees.push({
-                    swapped: false,
-                    rootS: clonedS,
-                    rootT: clonedT,
-                    links: links,
-                    time: 0,
-                    crossings: 0,
-                });
-                        
-            })
-            .catch(error => {
-                console.error('Error fetching tree data:', error);
-                alert('Failed to load tree data. See console for details.');
-            });
-            
-        return; // Skip the rest of the function when in Gurobi mode
+        console.log('Loading data for Gurobi visualization...');
+        // Wait for data to load
+        const success = await load_data();
+        
+        // Only proceed if data loaded successfully and we have trees
+        if (success && bestTrees.length > 0) {
+            console.log('Data loaded successfully, showing trees...');
+            showNextBestTree(0);
+        } else {
+            console.error('Failed to load necessary data for Gurobi visualization');
+        }
+        return; // Exit the function early
     }
+    
+    // Regular initialization for non-Gurobi case
+    let rootS = new Node();
+    let rootT = new Node();
+    test = 0;
     
     if(new_run){
         // Se è una nuova esecuzione, crea alberi casuali e collegamenti
@@ -498,6 +516,43 @@ const startVisualization = (new_run) => {
         originalS = cloneTree(rootS); // Clona l'albero S originale
         originalT = cloneTree(rootT); // Clona l'albero T originale
 
+        // After creating trees and links
+        let s_leafs = get_linear_order(rootS).length;
+        let t_leafs = get_linear_order(rootT).length;
+        let s_tree = JSON.stringify(originalS, null, 2);
+        let t_tree = JSON.stringify(originalT, null, 2);
+        let treeData = {
+            s_leafs,
+            t_leafs,
+            L,
+            s_tree,
+            t_tree
+        };
+
+        // Convert the data to a JSON string
+        let jsonString = JSON.stringify(treeData, null, 2);
+
+        // Fix: Properly format the POST request with error handling
+        fetch('/save_data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: jsonString
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.text();
+        })
+        .then(data => {
+            console.log('Data saved successfully:', data);
+        })
+        .catch(error => {
+            console.error('Error saving data:', error);
+        });
+
     } else {
         // Se si sta rielaborando, clona gli alberi originali
         console.log('rerunning..');
@@ -505,20 +560,30 @@ const startVisualization = (new_run) => {
         rootT = cloneTree(originalT);
     }
 
-    //let s_leafs = get_linear_order(rootS).length;
-    //let t_leafs = get_linear_order(rootT).length;
-    //let s_tree = JSON.stringify(originalS, null, 2);
-    //let t_tree = JSON.stringify(originalT, null, 2);
-    //let treeData = {
-        //s_leafs,
-        //t_leafs,
-        //L,
-        //s_tree,
-        //t_tree
-    //};
+    let s_leafs = get_linear_order(rootS).length;
+    let t_leafs = get_linear_order(rootT).length;
+    let s_tree = JSON.stringify(originalS, null, 2);
+    let t_tree = JSON.stringify(originalT, null, 2);
+    let treeData = {
+        s_leafs,
+        t_leafs,
+        L,
+        s_tree,
+        t_tree
+    };
 
     // Convert the data to a JSON string
-    //let jsonString = JSON.stringify(treeData, null, 2);
+    let jsonString = JSON.stringify(treeData, null, 2);
+
+    //now post the data to the server on localhost:3000/save_data
+    fetch('/save_data', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: jsonString
+    })
+    console.log('Data saved to tree_data.json');
 
     // Create a Blob with the JSON data
     //let blob = new Blob([jsonString], { type: 'application/json' });

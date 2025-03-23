@@ -32,9 +32,56 @@ xt = model.addVars(t_leafs, t_leafs, vtype=GRB.BINARY)
 e = []
 for arco in edges:e.append(f'arco_{arco[0]}_{arco[1]}')
 
+def find_first_common_parent(tree_json, leaf1, leaf2):
+
+    if isinstance(tree_json, str):
+        root = json.loads(tree_json)
+    else:
+        root = tree_json  # Already parsed
+    
+    def path_to_leaf(node, leaf, path=None):
+        """Find the path from root to the given leaf"""
+        if path is None:
+            path = []
+        
+        # Check if current node is the leaf we're looking for
+        if str(node.get('id', '')) == str(leaf):
+            return path + [node]
+        
+        # Recursively search in children
+        for child in node.get('children', []):
+            result = path_to_leaf(child, leaf, path + [node])
+            if result:
+                return result
+        
+        return None
+    
+    # Get paths from root to each leaf
+    path1 = path_to_leaf(root, leaf1)
+    path2 = path_to_leaf(root, leaf2)
+    
+    # If either path doesn't exist, return None
+    if not path1 or not path2:
+        return None
+    
+    # Find the last common node in both paths
+    common_parent = None
+    for i in range(min(len(path1), len(path2))):
+        if path1[i].get('id') == path2[i].get('id'):
+            common_parent = path1[i]
+        else:
+            break
+    
+    # Return the value or ID of the common parent
+    if common_parent:
+        return common_parent.get('value') or common_parent.get('id')
+    else:
+        return None
+
 def P(i, j, tree_type):
-    response = requests.get("http://localhost:3000/findfirstcommonparent", params={"tree_type": tree_type, "leaf1": i, "leaf2": j})
-    return str(response.json().get("commonParentId", ""))
+    common_parent = find_first_common_parent(tree_type, i, j)
+    print(common_parent)
+    return str(common_parent or "")
 
 def set_order_constraint(model, x, h, start, end, tree_type):
     if h >= end:return
