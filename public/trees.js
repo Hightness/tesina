@@ -1,10 +1,9 @@
 // Tree-related functions extracted from kanaglegram.js
-let test = 0;
+let leaf_value_counter = 0;
 let max_depth = 0; // Profondità massima dell'albero
 let L = []; // Lista dei collegamenti tra i nodi
 let bestTrees = []; // Array per memorizzare i migliori alberi trovati
 let currentBestIndex = 0; // Indice dell'albero migliore corrente
-let internal_nodes = number_of_leafs = 0; // Variabili per memorizzare il numero di nodi interni e foglie
 
 // Classe che rappresenta un nodo nell'albero
 class Node {
@@ -91,6 +90,15 @@ const normalize_leafs = (root, links) => {
             root.set_children(new_children);
         }
     }
+}
+
+//restituisce il numero di nodi interni
+const get_internal_nodes = (root) => {
+    let count = 0;
+    if (root.children.length === 0) return 0;
+    if (root.children.length === 1) return get_internal_nodes(root.children[0]);
+    for (let c of root.children) count += get_internal_nodes(c);
+    return count + 1;
 }
 
 const de_binarize_tree = root => {
@@ -215,7 +223,7 @@ const n_crossings = (sigma, tau_orders) => {
 const create_random_tree = (root, depth, max_children) => {
     // Crea un albero casuale dato una profondità e un numero massimo di figli
     if (depth == 0) {
-        root.value = `${test++}`;
+        root.value = `${leaf_value_counter++}`;
         Node.set_id_counter(root);
         return;
     }
@@ -488,7 +496,7 @@ if (typeof module !== 'undefined' && module.exports) {
         originalS,
         originalT,
         max_depth,
-        test
+        leaf_value_counter
 
     };
 } else {
@@ -526,6 +534,6 @@ if (typeof module !== 'undefined' && module.exports) {
         originalS,
         originalT,
         max_depth,
-        test
+        leaf_value_counter
     };
 }

@@ -35,6 +35,8 @@ app.post("/run-python", (req, res) => {
             // Parse the output to extract orderings
             const sOrderMatch = stdout.match(/Ordinamento s:\s*\[(.*?)\]/);
             const tOrderMatch = stdout.match(/Ordinamento t:\s*\[(.*?)\]/);
+            //get only the integer value of the crossings
+            const crossings = stdout.match(/Valore obiettivo:\s*(\d+)/)[1];
 
             const execution_time = new Date() - start;
             
@@ -45,7 +47,7 @@ app.post("/run-python", (req, res) => {
                 
                 console.log('Extracted S order:', sOrder);
                 console.log('Extracted T order:', tOrder);
-                res.json({ sOrder, tOrder, execution_time});
+                res.json({ sOrder, tOrder, execution_time, crossings});
             } else {
                 console.error('Could not extract ordering from output');
                 res.send(`Output format not recognized. Raw output:<br><pre>${stdout}</pre>`);
@@ -66,14 +68,16 @@ app.post('/save_results', (req, res) => {
         //add req.body to json array in treeData.file_name
         //get the json file
 
-        const old_data = fs.readFileSync('public/automatic_run.json');
-        let old_data_json = JSON.parse(old_data);
-        old_data_json.push(treeData);
+        let old_data;
+        if (fs.existsSync('public/automatic_run.json')) {
+            old_data = JSON.parse(fs.readFileSync('public/automatic_run.json'));
+        }else {old_data = [];}
+        old_data.push(treeData);
 
         // Save to file
         fs.writeFileSync(
             path.join(__dirname, 'public', 'automatic_run.json'), 
-            JSON.stringify(old_data_json, null, 2)
+            JSON.stringify(old_data, null, 2)
         );
         
         console.log('Data saved ');
@@ -108,6 +112,22 @@ app.post('/save_data', (req, res) => {
     }
 });
 
+app.post('/store_results', (req, res) => {
+    //move the tree_data.json to the dati_sperimentali folder, and add a counter to the file name
+    const old_data = JSON.parse(fs.readFileSync('public/automatic_run.json'));
+    let counter = 1;
+    while (fs.existsSync('public/dati_sperimentali/automatic_run' + counter + '.json')) {
+        counter++;
+    }
+
+    fs.writeFileSync(
+        path.join(__dirname, 'public', 'dati_sperimentali', 'automatic_run' + counter + '.json'), 
+        JSON.stringify(old_data, null, 2)
+    );
+
+    //delete old file json in the path public/automatic_run.json
+    fs.rmSync('public/automatic_run.json');
+});
 // Start the server
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

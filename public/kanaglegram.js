@@ -1,8 +1,8 @@
 let connectionsSVG; // SVG per le connessioni tra i nodi
 let startTime; // Tempo di inizio dell'algoritmo
-let sOrder, tOrder;
-let gurobi_time = -1;
-let gurobi_crossings = -1;
+//let sOrder, tOrder;
+//let gurobi_time = -1;
+//let gurobi_crossings = -1;
 
 // Add these helper functions near the top of the file
 // Update the disableAllButtons function to be more robust and add visual feedback
@@ -33,17 +33,44 @@ async function setGurobi() {
 
     const result = await response.json();
 
-    sOrder = result.sOrder;
-    tOrder = result.tOrder;
-    gurobi_time = result.execution_time;
-    gurobi_crossings = result.ncrossings;
+    const sOrder = result.sOrder;
+    const tOrder = result.tOrder;
+    const gurobi_time = result.execution_time;
+    const gurobi_crossings = parseInt(result.crossings)/2;
+
+    let clonedS = cloneTree(originalS);
+    let clonedT = cloneTree(originalT);
     
+    set_ranges_on_tree(clonedS);
+    set_ranges_on_tree(clonedT);
+
+    order_tree(clonedS, sOrder);
+    order_tree(clonedT, tOrder);
+
+    const [links, s_links, t_links] = set_links(clonedS, clonedT, L);
+
+    bestTrees.push({
+        swapped: false,
+        rootS: clonedS,
+        rootT: clonedT,
+        links: links,
+        time: gurobi_time,
+        crossings: gurobi_crossings,
+        optimal: true
+    });
+
   enableAllButtons(); // Re-enable all buttons
 }
 
 document.getElementById('runGurobiBtn').addEventListener('click', async () => {
-    await setGurobi();
-    await showNextBestTree(0);
+    let alreadyRun = false;
+    bestTrees.forEach(tree => {
+        if (tree.optimal) {
+            alert('Gurobi has already been run for this tree.');
+            alreadyRun = true;
+            return;
+        }});
+    if(!alreadyRun){await setGurobi();}
 });
 
 // Initialize D3 selection after DOM is loaded
@@ -87,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(scrollTimeout);
         scrollTimeout = setTimeout(() => {
             updateSVGPosition();
-        }, 5);
+        }, 1);
     };
     
     // Add scroll listeners
@@ -117,8 +144,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const automaticRun = async () => {
     let n = parseInt(document.getElementById('number_automatic_runs').value);
+    let n_start = n;
     while (n > 0) {
         await startVisualization(true);
+        document.title = `Automatic Run ${n_start - n + 1}`;
+        document.getElementById('titolo').innerText = `Automatic Run ${n_start - n + 1}`;
+
         let heuristic_time = bestTrees.at(-1).time;
         let heuristic_crossings = bestTrees.at(-1).crossings;
 
@@ -126,16 +157,23 @@ const automaticRun = async () => {
         await setGurobi();
         await showNextBestTree(0);
 
-        let gurobi_time = bestTrees.at(-1).time;
-        let gurobi_crossings = bestTrees.at(-1).crossings;
+        let number_of_leafs = get_linear_order(bestTrees.at(-1).rootS).length;
+        number_of_leafs += get_linear_order(bestTrees.at(-1).rootT).length;
 
+        let number_internal_nodes = get_internal_nodes(bestTrees.at(-1).rootS);
+        number_internal_nodes += get_internal_nodes(bestTrees.at(-1).rootT);
 
         let json_data = {
+            initial_crossings: bestTrees.at(0).crossings,
             heuristic_time: heuristic_time,
             heuristic_crossings: heuristic_crossings,
-            gurobi_time: gurobi_time,
-            gurobi_crossings: gurobi_crossings
+            gurobi_time: bestTrees.at(-1).time,
+            gurobi_crossings: bestTrees.at(-1).crossings,
+            number_of_leafs: number_of_leafs,
+            number_internal_nodes: number_internal_nodes,
+            number_of_links: Object.keys(bestTrees.at(-1).links).length
         };
+
         let jsonString = JSON.stringify(json_data, null, 2);
         fetch('/save_results', {
             method: 'POST',
@@ -145,9 +183,16 @@ const automaticRun = async () => {
             body: jsonString
         });
         n--;
-        console.log('automatic run', n);
     }
+
+    fetch('/store_results', {
+        method: 'POST'
+    });
+
+    document.title = "Kanaglegram Visualization";
+    document.getElementById('titolo').innerText = "Kanaglegram Visualization";
 }
+
 const drawConnections = links => {
     // Clear existing connections
     connectionsSVG.selectAll('*').remove();
@@ -211,8 +256,8 @@ const drawConnections = links => {
     document.getElementById('crossings').innerText = `Crossings: ${bestTrees[currentBestIndex].crossings} | Time: ${bestTrees[currentBestIndex].time} ms`;
     document.getElementById('crossings').style.color = 'rgb(236, 223, 204)';
     document.getElementById('crossings').style.backgroundColor = 'rgb(105, 117, 101)';
-    if (gurobi_time !== -1 && currentBestIndex === bestTrees.length - 1) {
-        document.getElementById('crossings').innerText = `Crossings: ${bestTrees[currentBestIndex].crossings} | Time: ${gurobi_time/1000} s`;
+    if (bestTrees[currentBestIndex].optimal) {
+        document.getElementById('crossings').innerText = `Crossings: ${bestTrees[currentBestIndex].crossings} | Time: ${bestTrees[currentBestIndex].time/1000} s`;
         document.getElementById('crossings').style.color = 'teal';
         //change backgroundcolor to darkgreen if optimal solution
         document.getElementById('crossings').style.backgroundColor = 'rgb(60, 61, 55)';
@@ -295,7 +340,7 @@ const plot = (root, containerId, links) => {
             try {
                 const tree = new Treant(treeConfig);
                 // Wait longer for trees to fully render
-                setTimeout(() => resolve(tree), 100);
+                setTimeout(() => resolve(tree), 10);
             } catch (error) {
                 console.error(`Error rendering tree in ${containerId}:`, error);
                 resolve(null);
@@ -337,36 +382,6 @@ function centerTreeInContainer(containerId) {
 
 const showNextBestTree = async (n) => {
     // Mostra l'albero migliore successivo o precedente
-    if (sOrder && sOrder.length != 0 && tOrder && tOrder.length != 0){
-        console.log('Gurobi solution found, adding to besttress');
-
-        let clonedS = cloneTree(originalS);
-        let clonedT = cloneTree(originalT);
-    
-        set_ranges_on_tree(clonedS);
-        set_ranges_on_tree(clonedT);
-
-        order_tree(clonedS, sOrder);
-        order_tree(clonedT, tOrder);
-
-        sOrder = tOrder = null;
-
-        let sigma = get_linear_order(clonedS);
-        const [links, s_links, t_links] = set_links(clonedS, clonedT, L);
-        let tau_order = get_tau_indexes(clonedT, sigma, links);
-        let ncrossings = n_crossings(sigma, tau_order);
-
-        bestTrees.push({
-            swapped: false,
-            rootS: clonedS,
-            rootT: clonedT,
-            links: links,
-            time: gurobi_time,
-            crossings: ncrossings,
-        });
-        return;
-    }
-
     if (bestTrees.length === 0) {
         alert('No best trees found yet.');
         return;
@@ -453,7 +468,7 @@ const heuristic = (rootS, rootT, s_l, t_l, link) => {
                 prev_ind = cur_ind;
                 p_ind = c_ind;
                 best = temp_nc;
-                bestTrees.push({swapped:swapped, rootS: bestRootS, rootT: bestRootT, links: link, time: Date.now() - startTime , crossings: best});
+                bestTrees.push({swapped:swapped, rootS: bestRootS, rootT: bestRootT, links: link, time: Date.now() - startTime , crossings: best, optimal: false});
             }
             [s_l, t_l] = [t_l, s_l];
             [rootS, rootT] = [rootT, rootS];
@@ -493,33 +508,37 @@ const startVisualization = async (new_run) => {
 
     let rootS = new Node();
     let rootT = new Node();
-    test = 0;
+    leaf_value_counter = 0;
+    let s_leafs;
+    let t_leafs;
         
     if(new_run){
         // Se è una nuova esecuzione, crea alberi casuali e collegamenti
-        console.log('new run');
         let m_c, td, n_connections;
         L = [];
             
         m_c = parseInt(document.getElementById('max_children').value); // Numero massimo di figli
         td = parseInt(document.getElementById('tree_depth').value); // Profondità dell'albero
-        n_connections = parseInt(document.getElementById('n_connections').value); // Numero di collegamenti
+        n_connections = parseFloat(document.getElementById('n_connections').value); // Numero di collegamenti
 
         create_random_tree(rootS, depth = td-1, max_children = m_c); // Crea l'albero S casuale
         create_random_tree(rootT, depth = td-1, max_children = m_c); // Crea l'albero T casuale
-        create_random_links(rootS, rootT, max_links = n_connections); // Crea collegamenti casuali
+
+        s_leafs = get_linear_order(rootS).length;
+        t_leafs = get_linear_order(rootT).length;
+
+        create_random_links(rootS, rootT, max_links = n_connections*(s_leafs+t_leafs)/2); // Crea collegamenti casuali
 
         originalS = cloneTree(rootS); // Clona l'albero S originale
         originalT = cloneTree(rootT); // Clona l'albero T originale
     } else {
         // Se si sta rielaborando, clona gli alberi originali
-        console.log('rerunning..');
         rootS = cloneTree(originalS);
         rootT = cloneTree(originalT);
+        s_leafs = get_linear_order(rootS).length;
+        t_leafs = get_linear_order(rootT).length;
     }
 
-    let s_leafs = get_linear_order(rootS).length;
-    let t_leafs = get_linear_order(rootT).length;
     let s_tree = JSON.stringify(originalS, null, 2);
     let t_tree = JSON.stringify(originalT, null, 2);
     let treeData = {
@@ -541,7 +560,6 @@ const startVisualization = async (new_run) => {
         },
         body: jsonString
     })
-    console.log('Data saved to tree_data.json');
 
     // S = [[["t0", "t1", "t2", "t3"], ["t4", "t5", "t6"]],[["t7"]],[["t8", "t9"], ["t10", "t11"], ["t12"]],[["t13", "t14"]],[["t15", "t16"]]];
     // T = [[["b0"]],[["b1", "b2"], ["b3", "b4", "b5"], ["b6"]],[["b7", "b8"]],[["b9", "b10"], ["b11", "b12"], ["b13", "b14"]]];
