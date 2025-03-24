@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- the title is passed from node server:-->
-    <title> anaglegram Visualization</title>
+    <title> Kanaglegram Visualization</title>
     <!-- Include D3.js library -->
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <!-- Include Raphael.js library -->
@@ -21,11 +21,11 @@
     <main>
         <div class="controls">
             <label for="depth">Depth:</label>
-            <input type="number" id="depth" value="100">
+            <input type="number" id="depth" value="200">
             <label for="heuristic_d">Heuristic Depth:</label>
-            <input type="number" id="heuristic_d" value="10">
+            <input type="number" id="heuristic_d" value="30">
             <label for="random_d">Rand Depth:</label>
-            <input type="number" id="random_d" value="5">
+            <input type="number" id="random_d" value="4">
             <label for="tree_depth">T Depth:</label>
             <input type="number" id="tree_depth" value="4">
             <label for="max_children">Children:</label>
@@ -33,13 +33,12 @@
             <label for="n_connections">n links:</label>
             <input type="number" id="n_connections" value="25">
             <button onclick="startVisualization(true)">Start</button>
-            <button onclick="showNextBestTree(-1)">Previous T</button>
-            <button onclick="showNextBestTree(1)">Next T</button>
+            <button onclick="showNextBestTree(-1)">Previous</button>
+            <button onclick="showNextBestTree(1)">Next</button>
             <button onclick="startVisualization(false)">reRun</button>
             <button id="runGurobiBtn">Run Optimization</button>
-            <div id="progress-container">
-                <div id="progress-bar"></div>
-            </div>
+            <input type="number" id="number_automatic_runs" value="10">
+            <button onclick="automaticRun()">Automatic Run</button>
         </div>
         <div id="crossings">Crossings: 0 | Time: 0 ms</div>
         <div id="swappedS">Swapped Nodes in S: </div>

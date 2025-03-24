@@ -1,6 +1,8 @@
 let connectionsSVG; // SVG per le connessioni tra i nodi
 let startTime; // Tempo di inizio dell'algoritmo
 let sOrder, tOrder;
+let gurobi_time = -1;
+let gurobi_crossings = -1;
 
 // Add these helper functions near the top of the file
 // Update the disableAllButtons function to be more robust and add visual feedback
@@ -21,49 +23,27 @@ function enableAllButtons() {
   });
 }
 
-document.getElementById('runGurobiBtn').addEventListener('click', async () => {
-  try {
+//make function async
+async function setGurobi() {
     disableAllButtons(); // Disable all buttons during processing
     
-    const response = await fetch('/run-gurobi', {
+    const response = await fetch('/run-python', {
       method: 'POST'
     });
-      
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-      
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      console.error("Response is not JSON:", await response.text());
-      throw new Error("Response is not JSON");
-    }
 
     const result = await response.json();
-    if (!result.sOrder || !result.tOrder) {
-      console.error("Orders not found in response:", result);
-      throw new Error("Orders not found in response");
-    }
 
     sOrder = result.sOrder;
     tOrder = result.tOrder;
+    gurobi_time = result.execution_time;
+    gurobi_crossings = result.ncrossings;
     
-    // Change button color to green to indicate success
-    const button = document.getElementById('runGurobiBtn');
-    const originalColor = button.style.backgroundColor;
-    button.style.backgroundColor = "green";
-    
-    // Add timer to change button color back after 2 seconds
-    setTimeout(() => {
-      button.style.backgroundColor = originalColor;
-    }, 500);
+  enableAllButtons(); // Re-enable all buttons
+}
 
-  } catch (error) {
-    console.error('Error running optimization:', error);
-    alert(`Error running optimization: ${error.message}`);
-  } finally {
-    enableAllButtons(); // Re-enable all buttons
-  }
+document.getElementById('runGurobiBtn').addEventListener('click', async () => {
+    await setGurobi();
+    await showNextBestTree(0);
 });
 
 // Initialize D3 selection after DOM is loaded
@@ -135,6 +115,39 @@ document.addEventListener('DOMContentLoaded', () => {
     observer.observe(document.querySelector('.tree-container'), config);
 });
 
+const automaticRun = async () => {
+    let n = parseInt(document.getElementById('number_automatic_runs').value);
+    while (n > 0) {
+        await startVisualization(true);
+        let heuristic_time = bestTrees.at(-1).time;
+        let heuristic_crossings = bestTrees.at(-1).crossings;
+
+        // Run Gurobi optimization
+        await setGurobi();
+        await showNextBestTree(0);
+
+        let gurobi_time = bestTrees.at(-1).time;
+        let gurobi_crossings = bestTrees.at(-1).crossings;
+
+
+        let json_data = {
+            heuristic_time: heuristic_time,
+            heuristic_crossings: heuristic_crossings,
+            gurobi_time: gurobi_time,
+            gurobi_crossings: gurobi_crossings
+        };
+        let jsonString = JSON.stringify(json_data, null, 2);
+        fetch('/save_results', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: jsonString
+        });
+        n--;
+        console.log('automatic run', n);
+    }
+}
 const drawConnections = links => {
     // Clear existing connections
     connectionsSVG.selectAll('*').remove();
@@ -196,7 +209,14 @@ const drawConnections = links => {
     });
 
     document.getElementById('crossings').innerText = `Crossings: ${bestTrees[currentBestIndex].crossings} | Time: ${bestTrees[currentBestIndex].time} ms`;
-    if (bestTrees[currentBestIndex].time === -1) {document.getElementById('crossings').innerText = `Crossings: ${bestTrees[currentBestIndex].crossings} | Optimal Solution`;}
+    document.getElementById('crossings').style.color = 'rgb(236, 223, 204)';
+    document.getElementById('crossings').style.backgroundColor = 'rgb(105, 117, 101)';
+    if (gurobi_time !== -1 && currentBestIndex === bestTrees.length - 1) {
+        document.getElementById('crossings').innerText = `Crossings: ${bestTrees[currentBestIndex].crossings} | Time: ${gurobi_time/1000} s`;
+        document.getElementById('crossings').style.color = 'teal';
+        //change backgroundcolor to darkgreen if optimal solution
+        document.getElementById('crossings').style.backgroundColor = 'rgb(60, 61, 55)';
+    }
 }
 
 const getLineIntersection = (line1, line2) => {
@@ -318,6 +338,7 @@ function centerTreeInContainer(containerId) {
 const showNextBestTree = async (n) => {
     // Mostra l'albero migliore successivo o precedente
     if (sOrder && sOrder.length != 0 && tOrder && tOrder.length != 0){
+        console.log('Gurobi solution found, adding to besttress');
 
         let clonedS = cloneTree(originalS);
         let clonedT = cloneTree(originalT);
@@ -340,9 +361,10 @@ const showNextBestTree = async (n) => {
             rootS: clonedS,
             rootT: clonedT,
             links: links,
-            time: -1,
+            time: gurobi_time,
             crossings: ncrossings,
         });
+        return;
     }
 
     if (bestTrees.length === 0) {
@@ -428,7 +450,6 @@ const heuristic = (rootS, rootT, s_l, t_l, link) => {
             tau_order = get_tau_indexes(bestRootT, sigma, link);
             let temp_nc = n_crossings(sigma, tau_order);
             if (temp_nc < best) {
-                console.log(`Found new best tree with ${temp_nc} crossings`);
                 prev_ind = cur_ind;
                 p_ind = c_ind;
                 best = temp_nc;

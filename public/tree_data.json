@@ -1,168 +1,56 @@
 {
-  "s_leafs": 76,
-  "t_leafs": 12,
+  "s_leafs": 4,
+  "t_leafs": 6,
   "L": [
     [
-      "56",
-      "77"
+      "1",
+      "7"
     ],
     [
-      "16",
-      "80"
-    ],
-    [
-      "54",
-      "77"
-    ],
-    [
-      "72",
-      "86"
-    ],
-    [
-      "62",
-      "83"
-    ],
-    [
-      "47",
-      "79"
-    ],
-    [
-      "43",
-      "77"
-    ],
-    [
-      "52",
-      "84"
-    ],
-    [
-      "41",
-      "82"
-    ],
-    [
-      "27",
-      "86"
-    ],
-    [
-      "61",
-      "77"
-    ],
-    [
-      "49",
-      "86"
-    ],
-    [
-      "60",
-      "82"
-    ],
-    [
-      "21",
-      "77"
-    ],
-    [
-      "22",
-      "80"
-    ],
-    [
-      "53",
-      "86"
-    ],
-    [
-      "66",
-      "87"
-    ],
-    [
-      "4",
-      "83"
-    ],
-    [
-      "34",
-      "83"
+      "3",
+      "4"
     ],
     [
       "0",
-      "78"
+      "8"
     ],
     [
-      "32",
-      "82"
+      "0",
+      "4"
     ],
     [
-      "74",
-      "80"
+      "1",
+      "4"
     ],
     [
-      "41",
-      "83"
+      "0",
+      "9"
     ],
     [
       "2",
-      "86"
+      "4"
     ],
     [
-      "62",
-      "87"
+      "3",
+      "9"
     ],
     [
-      "35",
-      "77"
+      "0",
+      "7"
     ],
     [
-      "67",
-      "82"
+      "2",
+      "5"
     ],
     [
-      "21",
-      "79"
+      "3",
+      "8"
     ],
     [
-      "11",
-      "82"
-    ],
-    [
-      "74",
-      "78"
-    ],
-    [
-      "66",
-      "80"
-    ],
-    [
-      "39",
-      "81"
-    ],
-    [
-      "66",
-      "86"
-    ],
-    [
-      "27",
-      "76"
-    ],
-    [
-      "12",
-      "80"
-    ],
-    [
-      "61",
-      "80"
-    ],
-    [
-      "9",
-      "76"
-    ],
-    [
-      "30",
-      "86"
-    ],
-    [
-      "67",
-      "80"
-    ],
-    [
-      "46",
-      "77"
+      "1",
+      "8"
     ]
   ],
-  "s_tree": "{\n  \"value\": null,\n  \"children\": [\n    {\n      \"value\": null,\n      \"children\": [\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"0\",\n              \"children\": [],\n              \"id\": \"0\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"1\",\n              \"children\": [],\n              \"id\": \"1\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"2\",\n              \"children\": [],\n              \"id\": \"2\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"3\",\n              \"children\": [],\n              \"id\": \"3\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"4\",\n              \"children\": [],\n              \"id\": \"4\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"5\",\n              \"children\": [],\n              \"id\": \"5\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(3)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"6\",\n              \"children\": [],\n              \"id\": \"6\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"7\",\n              \"children\": [],\n              \"id\": \"7\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"8\",\n              \"children\": [],\n              \"id\": \"8\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"9\",\n              \"children\": [],\n              \"id\": \"9\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"10\",\n              \"children\": [],\n              \"id\": \"10\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(10)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"11\",\n              \"children\": [],\n              \"id\": \"11\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"12\",\n              \"children\": [],\n              \"id\": \"12\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"13\",\n              \"children\": [],\n              \"id\": \"13\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(16)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"14\",\n              \"children\": [],\n              \"id\": \"14\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"15\",\n              \"children\": [],\n              \"id\": \"15\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"16\",\n              \"children\": [],\n              \"id\": \"16\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"17\",\n              \"children\": [],\n              \"id\": \"17\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"18\",\n              \"children\": [],\n              \"id\": \"18\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"19\",\n              \"children\": [],\n              \"id\": \"19\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(20)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"20\",\n              \"children\": [],\n              \"id\": \"20\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"21\",\n              \"children\": [],\n              \"id\": \"21\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"22\",\n              \"children\": [],\n              \"id\": \"22\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"23\",\n              \"children\": [],\n              \"id\": \"23\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"24\",\n              \"children\": [],\n              \"id\": \"24\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"25\",\n              \"children\": [],\n              \"id\": \"25\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(27)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        }\n      ],\n      \"id\": \"(2)\",\n      \"splitted\": false,\n      \"standard_dev\": 0,\n      \"min_bound\": 0,\n      \"max_bound\": null\n    },\n    {\n      \"value\": null,\n      \"children\": [\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"26\",\n              \"children\": [],\n              \"id\": \"26\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"27\",\n              \"children\": [],\n              \"id\": \"27\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"28\",\n              \"children\": [],\n              \"id\": \"28\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(35)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"29\",\n              \"children\": [],\n              \"id\": \"29\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"30\",\n              \"children\": [],\n              \"id\": \"30\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(39)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"31\",\n              \"children\": [],\n              \"id\": \"31\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"32\",\n              \"children\": [],\n              \"id\": \"32\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"33\",\n              \"children\": [],\n              \"id\": \"33\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"34\",\n              \"children\": [],\n              \"id\": \"34\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"35\",\n              \"children\": [],\n              \"id\": \"35\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"36\",\n              \"children\": [],\n              \"id\": \"36\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(42)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"37\",\n              \"children\": [],\n              \"id\": \"37\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(49)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"38\",\n              \"children\": [],\n              \"id\": \"38\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(51)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"39\",\n              \"children\": [],\n              \"id\": \"39\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"40\",\n              \"children\": [],\n              \"id\": \"40\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"41\",\n              \"children\": [],\n              \"id\": \"41\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"42\",\n              \"children\": [],\n              \"id\": \"42\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(53)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        }\n      ],\n      \"id\": \"(34)\",\n      \"splitted\": false,\n      \"standard_dev\": 0,\n      \"min_bound\": 0,\n      \"max_bound\": null\n    },\n    {\n      \"value\": null,\n      \"children\": [\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"43\",\n              \"children\": [],\n              \"id\": \"43\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"44\",\n              \"children\": [],\n              \"id\": \"44\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"45\",\n              \"children\": [],\n              \"id\": \"45\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"46\",\n              \"children\": [],\n              \"id\": \"46\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"47\",\n              \"children\": [],\n              \"id\": \"47\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"48\",\n              \"children\": [],\n              \"id\": \"48\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(59)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"49\",\n              \"children\": [],\n              \"id\": \"49\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"50\",\n              \"children\": [],\n              \"id\": \"50\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(66)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        }\n      ],\n      \"id\": \"(58)\",\n      \"splitted\": false,\n      \"standard_dev\": 0,\n      \"min_bound\": 0,\n      \"max_bound\": null\n    },\n    {\n      \"value\": null,\n      \"children\": [\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"51\",\n              \"children\": [],\n              \"id\": \"51\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"52\",\n              \"children\": [],\n              \"id\": \"52\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"53\",\n              \"children\": [],\n              \"id\": \"53\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"54\",\n              \"children\": [],\n              \"id\": \"54\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"55\",\n              \"children\": [],\n              \"id\": \"55\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"56\",\n              \"children\": [],\n              \"id\": \"56\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(70)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"57\",\n              \"children\": [],\n              \"id\": \"57\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"58\",\n              \"children\": [],\n              \"id\": \"58\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"59\",\n              \"children\": [],\n              \"id\": \"59\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"60\",\n              \"children\": [],\n              \"id\": \"60\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"61\",\n              \"children\": [],\n              \"id\": \"61\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(77)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"62\",\n              \"children\": [],\n              \"id\": \"62\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"63\",\n              \"children\": [],\n              \"id\": \"63\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"64\",\n              \"children\": [],\n              \"id\": \"64\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"65\",\n              \"children\": [],\n              \"id\": \"65\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"66\",\n              \"children\": [],\n              \"id\": \"66\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(83)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"67\",\n              \"children\": [],\n              \"id\": \"67\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"68\",\n              \"children\": [],\n              \"id\": \"68\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"69\",\n              \"children\": [],\n              \"id\": \"69\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(89)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        }\n      ],\n      \"id\": \"(69)\",\n      \"splitted\": false,\n      \"standard_dev\": 0,\n      \"min_bound\": 0,\n      \"max_bound\": null\n    },\n    {\n      \"value\": null,\n      \"children\": [\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"70\",\n              \"children\": [],\n              \"id\": \"70\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"71\",\n              \"children\": [],\n              \"id\": \"71\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"72\",\n              \"children\": [],\n              \"id\": \"72\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"73\",\n              \"children\": [],\n              \"id\": \"73\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"74\",\n              \"children\": [],\n              \"id\": \"74\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"75\",\n              \"children\": [],\n              \"id\": \"75\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(94)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        }\n      ],\n      \"id\": \"(93)\",\n      \"splitted\": false,\n      \"standard_dev\": 0,\n      \"min_bound\": 0,\n      \"max_bound\": null\n    }\n  ],\n  \"id\": \"(0)\",\n  \"splitted\": false,\n  \"standard_dev\": 0,\n  \"min_bound\": 0,\n  \"max_bound\": null\n}",
-  "t_tree": "{\n  \"value\": null,\n  \"children\": [\n    {\n      \"value\": null,\n      \"children\": [\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"76\",\n              \"children\": [],\n              \"id\": \"76\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"77\",\n              \"children\": [],\n              \"id\": \"77\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"78\",\n              \"children\": [],\n              \"id\": \"78\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"79\",\n              \"children\": [],\n              \"id\": \"79\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"80\",\n              \"children\": [],\n              \"id\": \"80\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"81\",\n              \"children\": [],\n              \"id\": \"81\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(102)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"82\",\n              \"children\": [],\n              \"id\": \"82\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"83\",\n              \"children\": [],\n              \"id\": \"83\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(109)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"84\",\n              \"children\": [],\n              \"id\": \"84\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(112)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"85\",\n              \"children\": [],\n              \"id\": \"85\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"86\",\n              \"children\": [],\n              \"id\": \"86\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"87\",\n              \"children\": [],\n              \"id\": \"87\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(114)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        }\n      ],\n      \"id\": \"(101)\",\n      \"splitted\": false,\n      \"standard_dev\": 0,\n      \"min_bound\": 0,\n      \"max_bound\": null\n    }\n  ],\n  \"id\": \"(1)\",\n  \"splitted\": false,\n  \"standard_dev\": 0,\n  \"min_bound\": 0,\n  \"max_bound\": null\n}"
+  "s_tree": "{\n  \"value\": null,\n  \"children\": [\n    {\n      \"value\": null,\n      \"children\": [\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"0\",\n              \"children\": [],\n              \"id\": \"0\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"1\",\n              \"children\": [],\n              \"id\": \"1\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"2\",\n              \"children\": [],\n              \"id\": \"2\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"3\",\n              \"children\": [],\n              \"id\": \"3\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(3)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        }\n      ],\n      \"id\": \"(2)\",\n      \"splitted\": false,\n      \"standard_dev\": 0,\n      \"min_bound\": 0,\n      \"max_bound\": null\n    }\n  ],\n  \"id\": \"(0)\",\n  \"splitted\": false,\n  \"standard_dev\": 0,\n  \"min_bound\": 0,\n  \"max_bound\": null\n}",
+  "t_tree": "{\n  \"value\": null,\n  \"children\": [\n    {\n      \"value\": null,\n      \"children\": [\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"4\",\n              \"children\": [],\n              \"id\": \"4\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(9)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"5\",\n              \"children\": [],\n              \"id\": \"5\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"6\",\n              \"children\": [],\n              \"id\": \"6\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"7\",\n              \"children\": [],\n              \"id\": \"7\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(11)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        },\n        {\n          \"value\": null,\n          \"children\": [\n            {\n              \"value\": \"8\",\n              \"children\": [],\n              \"id\": \"8\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            },\n            {\n              \"value\": \"9\",\n              \"children\": [],\n              \"id\": \"9\",\n              \"splitted\": false,\n              \"standard_dev\": 0,\n              \"min_bound\": 0,\n              \"max_bound\": null\n            }\n          ],\n          \"id\": \"(15)\",\n          \"splitted\": false,\n          \"standard_dev\": 0,\n          \"min_bound\": 0,\n          \"max_bound\": null\n        }\n      ],\n      \"id\": \"(8)\",\n      \"splitted\": false,\n      \"standard_dev\": 0,\n      \"min_bound\": 0,\n      \"max_bound\": null\n    }\n  ],\n  \"id\": \"(1)\",\n  \"splitted\": false,\n  \"standard_dev\": 0,\n  \"min_bound\": 0,\n  \"max_bound\": null\n}"
 }

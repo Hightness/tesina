@@ -4,6 +4,7 @@ let max_depth = 0; // Profondità massima dell'albero
 let L = []; // Lista dei collegamenti tra i nodi
 let bestTrees = []; // Array per memorizzare i migliori alberi trovati
 let currentBestIndex = 0; // Indice dell'albero migliore corrente
+let internal_nodes = number_of_leafs = 0; // Variabili per memorizzare il numero di nodi interni e foglie
 
 // Classe che rappresenta un nodo nell'albero
 class Node {
@@ -211,7 +212,6 @@ const n_crossings = (sigma, tau_orders) => {
     // Poiché ogni intersezione è contata due volte, divide il totale per 2
     return totalCrossings / 2;
 }
-
 const create_random_tree = (root, depth, max_children) => {
     // Crea un albero casuale dato una profondità e un numero massimo di figli
     if (depth == 0) {

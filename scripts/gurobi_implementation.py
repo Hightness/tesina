@@ -1,6 +1,10 @@
 from gurobipy import Model, GRB
 import json
 import os
+#nodi foglia
+#rapporto archi e nodi foglia 2, 4, 10
+#rapport nodi interni e nodi foglia 1/4 1/2 2/3
+
 
 # Read from JSON file instead of command line arguments
 json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'public', 'tree_data.json')
@@ -123,6 +127,7 @@ if model.status == GRB.OPTIMAL:
     #creami lista con n zeri:
     ordinamento_s = [i for i in range(s_leafs)]
     print("\n\nSoluzione ottimale trovata:")
+    print("Valore obiettivo:", model.objVal)
     for i in range(s_leafs):
         posizione = 0
         for j in range(s_leafs):

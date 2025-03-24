@@ -132,7 +132,7 @@ main {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
-    color: rgb(24, 28, 20); /* Dark text color */
+    color: rgb(236, 223, 204);
 }
 
 #swappedS, #swappedT{
@@ -208,21 +208,6 @@ circle {
 line {
     stroke: rgb(105, 117, 101); /* Line color */
     stroke-width: 0.5;
-}
-
-#progress-container {
-    width: 200px; /* Adjust the width as needed */
-    background-color: #222831;
-    height: 20px;
-    margin-left: 20px; /* Optional: Adjust spacing between buttons and progress bar */
-    border-radius: 4px;
-}
-
-#progress-bar {
-    width: 0%;
-    height: 100%;
-    background-color: #00adb5; /* Teal progress bar */
-    border-radius: 4px;
 }
 
 .tree-container {
