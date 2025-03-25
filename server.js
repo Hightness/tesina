@@ -143,6 +143,7 @@ app.post("/run-heuristic", (req, res) => {
     let s_l = req.body.s_links;
     let t_l = req.body.t_links;
     let link = req.body.links;
+    let initial_crossings = req.body.initial_crossings;
     //prendi jrootS da tree_data.json
     let jrootS = JSON.parse(JSON.parse(fs.readFileSync('public/tree_data.json')).s_tree);
     let jrootT = JSON.parse(JSON.parse(fs.readFileSync('public/tree_data.json')).t_tree);
@@ -153,7 +154,7 @@ app.post("/run-heuristic", (req, res) => {
     
     let rand_call = 0;
     swapped = false;
-    let best = Infinity;
+    let best = initial_crossings;
 
     let c_ind = p_ind = 0;
     let bestTrees = [];

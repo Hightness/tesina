@@ -221,12 +221,10 @@ const n_crossings = (sigma, tau_orders) => {
     return totalCrossings / 2;
 }
 
-let n_children = 0;
 const create_random_tree = (root, depth, max_children, n_leafs) => {
     // Crea un albero casuale dato una profondità e un numero massimo di figli
     if (depth == 0) {
         root.value = `${leaf_value_counter++}`;
-        n_children++;
         Node.set_id_counter(root);
         return;
     }
@@ -235,7 +233,6 @@ const create_random_tree = (root, depth, max_children, n_leafs) => {
     for (let i = 0; i < n_children; i++) {
         let n = new Node();
         create_random_tree(n, depth - 1, max_children, n_leafs);
-        if (n_children == n_leafs) {break;}
         new_children.push(n);
     }
     if(new_children.length == 0){console.log('problemaaa');}
@@ -263,7 +260,7 @@ const cloneTree = node => {
     let newNode = new Node(node.value);
     newNode.id = node.id;
     newNode.splitted = node.splitted;
-    newNode.children = node.children.map(child => cloneTree(child));
+    newNode.set_children(node.children.map(child => cloneTree(child)));
     return newNode;
 }
 
@@ -317,7 +314,7 @@ const order_tree = (root, order) => {
         }
         new_children.push(root.children[next_index]);
     }
-    root.children = new_children;
+    root.set_children(new_children);
     root.children.forEach(c => order_tree(c, order));
 }
 

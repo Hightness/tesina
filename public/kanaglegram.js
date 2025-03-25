@@ -146,14 +146,15 @@ const automaticRun = async () => {
     let n_start = n;
     while (n > 0) {
         document.title = `Automatic Run ${n_start - n + 1}, running Heuristic`;
+        document.getElementById('titolo').innerText = `Automatic Run ${n_start - n + 1}, running Heuristic`;
         await startVisualization(true);
-        document.getElementById('titolo').innerText = `Automatic Run ${n_start - n + 1}`;
 
         let heuristic_time = bestTrees.at(-1).time;
         let heuristic_crossings = bestTrees.at(-1).crossings;
 
         // Run Gurobi optimization
         document.title = `Automatic Run ${n_start - n + 1}, running Gurobi`;
+        document.getElementById('titolo').innerText = `Automatic Run ${n_start - n + 1}, running Heuristic`;
         await setGurobi();
         await showNextBestTree(0);
 
@@ -395,13 +396,13 @@ const showNextBestTree = async (n) => {
     let plotPromises = [];
 
     if (bestTree.swapped) {
-        //swappedS = printSwappednodes(bestTree.rootT, originalS);
-        //swappedT = printSwappednodes(bestTree.rootS, originalT);
+        swappedS = printSwappednodes(bestTree.rootT, originalS);
+        swappedT = printSwappednodes(bestTree.rootS, originalT);
         plotPromises.push(plot(bestTree.rootT, 'bestS', links));
         plotPromises.push(plot(bestTree.rootS, 'bestT', links));
     } else {
-        //swappedT = printSwappednodes(bestTree.rootT, originalT);
-        //swappedS = printSwappednodes(bestTree.rootS, originalS);
+        swappedT = printSwappednodes(bestTree.rootT, originalT);
+        swappedS = printSwappednodes(bestTree.rootS, originalS);
         plotPromises.push(plot(bestTree.rootS, 'bestS', links));
         plotPromises.push(plot(bestTree.rootT, 'bestT', links));
     }
@@ -454,15 +455,14 @@ const startVisualization = async (new_run) => {
         
     if(new_run){
         // Se è una nuova esecuzione, crea alberi casuali e collegamenti
-        let m_c, td, n_connections;
+        let m_c, n_connections;
         L = [];
             
         m_c = parseInt(document.getElementById('max_children').value); // Numero massimo di figli
-        td = parseInt(document.getElementById('tree_depth').value); // Profondità dell'albero
         n_connections = parseFloat(document.getElementById('n_connections').value); // Numero di collegamenti
 
-        create_random_tree(rootS, depth = td-1, max_children = m_c); // Crea l'albero S casuale
-        create_random_tree(rootT, depth = td-1, max_children = m_c); // Crea l'albero T casuale
+        create_random_tree(rootS, depth = 3, max_children = m_c); // Crea l'albero S casuale
+        create_random_tree(rootT, depth = 3, max_children = m_c); // Crea l'albero T casuale
 
         s_leafs = get_linear_order(rootS).length;
         t_leafs = get_linear_order(rootT).length;
@@ -525,12 +525,17 @@ const startVisualization = async (new_run) => {
     let heuristic_d = parseInt(document.getElementById('heuristic_d').value);
     let random_d = parseInt(document.getElementById('random_d').value);
     disableAllButtons();
+    //get initial crossings
+    let sigma = get_linear_order(originalS);
+    let tau_order = get_tau_indexes(originalT, sigma, links);
+    let initial_crossings = n_crossings(sigma, tau_order);
+
     let response = await fetch('/run-heuristic', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({depth: d, heuristic_d: heuristic_d, random_d: random_d, s_links: s_links, t_links: t_links, links: links})
+        body: JSON.stringify({depth: d, heuristic_d: heuristic_d, random_d: random_d, s_links: s_links, t_links: t_links, links: links, initial_crossings: initial_crossings})
     });
     bestTrees = await response.json();
     bestTrees = bestTrees['bestTrees'];
@@ -543,10 +548,6 @@ const startVisualization = async (new_run) => {
         data.rootT = tempT;
     });
 
-    //get initial crossings
-    let sigma = get_linear_order(originalS);
-    let tau_order = get_tau_indexes(originalT, sigma, links);
-    let initial_crossings = n_crossings(sigma, tau_order);
 
     //insert originalS at the start of bestTrees
     bestTrees.unshift({swapped: false, rootS: originalS, rootT: originalT, links: links, time: 0, crossings: initial_crossings, optimal: false});
