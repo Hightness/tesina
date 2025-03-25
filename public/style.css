@@ -31,7 +31,6 @@ main {
     padding: 20px;
 }
 
-
 .controls label, .controls input, .controls button {
     margin-right: 10px;
     color: rgb(236, 223, 204); /* Light text color */
@@ -47,7 +46,7 @@ main {
 }
 
 .controls input {
-    width: 60px; /* Smaller width for textboxes */
+    width: 3%; /* Smaller width for textboxes */
 }
 
 .controls button {
@@ -154,7 +153,7 @@ main {
 }
 .leaf-node{
     font-size: 0.5em;
-    color: #00adb5; /* Teal progress bar */
+    color: teal; /* Teal progress bar */
 }
 
 .Treant .node {
@@ -201,7 +200,7 @@ path {
 }
 
 circle {
-    fill: #00adb5; /* Teal progress bar */
+    fill: teal; /* Teal progress bar */
     r: 1;
 }
 
@@ -268,7 +267,7 @@ line {
 @supports (scrollbar-width: thin) {
     #bestS, #bestT {
         scrollbar-width: thin;
-        scrollbar-color: #00adb5 rgb(236, 223, 204);
+        scrollbar-color: teal rgb(236, 223, 204);
         scroll-behavior: smooth;
     }
 }

@@ -24,7 +24,8 @@ with open(json_path, 'r') as file:
 
 # Creazione del modello
 model = Model("Vincoli condizionali")
-model.Params.MemLimit = 1024 * 1024 * 1024 * 10 # 10 GB
+model.Params.MemLimit = 12 # 12 GB
+model.Params.NodefileStart = 11 # 11 GB 
 
 
 # Aggiunta delle variabili xs, xt, ..., xn - use name parameter directly when creating variables
@@ -36,6 +37,7 @@ xt = model.addVars(t_leafs, t_leafs, vtype=GRB.BINARY)
 
 e = []
 for arco in edges:e.append(f'arco_{arco[0]}_{arco[1]}')
+e = set(e)
 
 def find_first_common_parent(tree_json, leaf1, leaf2):
 

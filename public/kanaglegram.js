@@ -6,11 +6,13 @@ let startTime; // Tempo di inizio dell'algoritmo
 
 // Add these helper functions near the top of the file
 // Update the disableAllButtons function to be more robust and add visual feedback
-function disableAllButtons() {
+function disableAllButtons(exception=null) {
   document.querySelectorAll('button, .btn, input[type="button"]').forEach(btn => {
-    btn.disabled = true;
-    btn.style.opacity = '0.6';
-    btn.style.cursor = 'not-allowed';
+    if (btn.id !== exception){
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.style.cursor = 'not-allowed';
+    }
   });
 }
 
@@ -25,41 +27,47 @@ function enableAllButtons() {
 
 //make function async
 async function setGurobi() {
-    disableAllButtons(); // Disable all buttons during processing
+    disableAllButtons("no_gurobi"); // Disable all buttons during processing
     
     const response = await fetch('/run-python', {
       method: 'POST'
     });
+    try{
 
-    const result = await response.json();
+        const result = await response.json();
 
-    const sOrder = result.sOrder;
-    const tOrder = result.tOrder;
-    const gurobi_time = result.execution_time;
-    const gurobi_crossings = parseInt(result.crossings)/2;
+        const sOrder = result.sOrder;
+        const tOrder = result.tOrder;
+        const gurobi_time = result.execution_time;
+        const gurobi_crossings = parseInt(result.crossings)/2;
 
-    let clonedS = cloneTree(originalS);
-    let clonedT = cloneTree(originalT);
+        let clonedS = cloneTree(originalS);
+        let clonedT = cloneTree(originalT);
     
-    set_ranges_on_tree(clonedS);
-    set_ranges_on_tree(clonedT);
+        set_ranges_on_tree(clonedS);
+        set_ranges_on_tree(clonedT);
 
-    order_tree(clonedS, sOrder);
-    order_tree(clonedT, tOrder);
+        order_tree(clonedS, sOrder);
+        order_tree(clonedT, tOrder);
 
-    const [links, s_links, t_links] = set_links(clonedS, clonedT, L);
+        const [links, s_links, t_links] = set_links(clonedS, clonedT, L);
 
-    bestTrees.push({
-        swapped: false,
-        rootS: clonedS,
-        rootT: clonedT,
-        links: links,
-        time: gurobi_time,
-        crossings: gurobi_crossings,
-        optimal: true
-    });
+        bestTrees.push({
+            swapped: false,
+            rootS: clonedS,
+            rootT: clonedT,
+            links: links,
+            time: gurobi_time,
+            crossings: gurobi_crossings,
+            optimal: true
+        });
+    } catch (error) {
+        enableAllButtons(); // Re-enable all buttons
+        return false;
+    }
 
   enableAllButtons(); // Re-enable all buttons
+  return true;
 }
 
 document.getElementById('runGurobiBtn').addEventListener('click', async () => {
@@ -70,7 +78,15 @@ document.getElementById('runGurobiBtn').addEventListener('click', async () => {
             alreadyRun = true;
             return;
         }});
-    if(!alreadyRun){await setGurobi();}
+    if(!alreadyRun){
+        document.title = `Running Gurobi`;
+        document.getElementById('titolo').style.color = 'teal';
+        document.getElementById('titolo').innerText = `Running Gurobi`;
+        await setGurobi();
+        document.getElementById('titolo').style.color = 'rgb(236, 223, 204)';
+        document.title = "Kanaglegram Visualization";
+        document.getElementById('titolo').innerText = "Kanaglegram Visualization";
+    }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -146,16 +162,19 @@ const automaticRun = async () => {
     let n_start = n;
     while (n > 0) {
         document.title = `Automatic Run ${n_start - n + 1}, running Heuristic`;
+        document.getElementById('titolo').style.color = 'rgb(236, 223, 204)';
         document.getElementById('titolo').innerText = `Automatic Run ${n_start - n + 1}, running Heuristic`;
-        await startVisualization(true);
+        await startVisualization(5);
 
         let heuristic_time = bestTrees.at(-1).time;
         let heuristic_crossings = bestTrees.at(-1).crossings;
 
         // Run Gurobi optimization
         document.title = `Automatic Run ${n_start - n + 1}, running Gurobi`;
-        document.getElementById('titolo').innerText = `Automatic Run ${n_start - n + 1}, running Heuristic`;
-        await setGurobi();
+        document.getElementById('titolo').style.color = 'teal';
+        document.getElementById('titolo').innerText = `Automatic Run ${n_start - n + 1}, running Gurobi`;
+        let esito = await setGurobi();
+        if (!esito) {continue;}
         await showNextBestTree(0);
 
         let number_of_leafs = get_linear_order(bestTrees.at(-1).rootS).length;
@@ -186,12 +205,14 @@ const automaticRun = async () => {
         n--;
     }
 
+    document.getElementById('titolo').style.color = 'rgb(236, 223, 204)';
+    document.title = "Kanaglegram Visualization";
+    document.getElementById('titolo').innerText = "Kanaglegram Visualization";
+
     await fetch('/store_results', {
         method: 'POST'
     });
 
-    document.title = "Kanaglegram Visualization";
-    document.getElementById('titolo').innerText = "Kanaglegram Visualization";
 }
 
 const drawConnections = links => {
@@ -436,6 +457,7 @@ const showNextBestTree = async (n) => {
 // Funzione per iniziare la visualizzazione e attendere il completamento dell'euristica
 const startVisualization = async (new_run) => {
     // Inizializza variabili e pulisce lo schermo
+    //new_run = 1 allora nuova, 0 allora rielabora
     bestTrees = [];
     if(connectionsSVG) connectionsSVG.selectAll('*').remove();
     document.getElementById('bestS').innerHTML = '';
@@ -453,7 +475,11 @@ const startVisualization = async (new_run) => {
     let s_leafs;
     let t_leafs;
         
-    if(new_run){
+    if(new_run > 0){
+        if (new_run === 1) {
+            document.title = `Running Heuristic`;
+            document.getElementById('titolo').innerText = `Running Heuristic`;
+        }
         // Se è una nuova esecuzione, crea alberi casuali e collegamenti
         let m_c, n_connections;
         L = [];
@@ -471,8 +497,14 @@ const startVisualization = async (new_run) => {
 
         originalS = cloneTree(rootS); // Clona l'albero S originale
         originalT = cloneTree(rootT); // Clona l'albero T originale
-    } else {
+    } else if (new_run === 0) {
         // Se si sta rielaborando, clona gli alberi originali
+        document.title = `Re-Running Heuristic`;
+        document.getElementById('titolo').innerText = `Re-Running Heuristic`;
+        if (!originalS.children || originalS.children.length === 0) {
+            alert('No trees to re-run. Please run a new heuristic first.');
+            return;
+        }
         rootS = cloneTree(originalS);
         rootT = cloneTree(originalT);
         s_leafs = get_linear_order(rootS).length;
@@ -551,9 +583,12 @@ const startVisualization = async (new_run) => {
 
     //insert originalS at the start of bestTrees
     bestTrees.unshift({swapped: false, rootS: originalS, rootT: originalT, links: links, time: 0, crossings: initial_crossings, optimal: false});
-    //order bestTrees by crossings
-    bestTrees.sort((a, b) => b.crossings - a.crossings);
 
     enableAllButtons();
     showNextBestTree(0);
+
+    if (new_run === 1) {
+        document.title = "Kanaglegram Visualization";
+        document.getElementById('titolo').innerText = "Kanaglegram Visualization";
+    }
 }
