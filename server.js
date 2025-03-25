@@ -4,6 +4,8 @@ const fs = require('fs'); // Add fs module to read files
 const app = express();
 const port = 3000;
 const { exec } = require("child_process");
+//import all functions from trees.js inside public/trees.js
+const {Node, rebuildTree, binarize_tree, cloneTree, de_binarize_tree, get_linear_order, get_tau_indexes, set_ranges_on_tree, compute_crossings, n_crossings, set_standard_dev, randomly_swap_children} = require('./public/trees.js');
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -45,8 +47,6 @@ app.post("/run-python", (req, res) => {
                 const sOrder = sOrderMatch[1].split(',').map(Number);
                 const tOrder = tOrderMatch[1].split(',').map(Number);
                 
-                console.log('Extracted S order:', sOrder);
-                console.log('Extracted T order:', tOrder);
                 res.json({ sOrder, tOrder, execution_time, crossings});
             } else {
                 console.error('Could not extract ordering from output');
@@ -80,7 +80,7 @@ app.post('/save_results', (req, res) => {
             JSON.stringify(old_data, null, 2)
         );
         
-        console.log('Data saved ');
+        console.log('Data of the automatic run saved ');
         res.status(200).send('Data saved successfully');
     } catch (error) {
         console.error('Error saving data:', error);
@@ -128,6 +128,84 @@ app.post('/store_results', (req, res) => {
     //delete old file json in the path public/automatic_run.json
     fs.rmSync('public/automatic_run.json');
 });
+
+//aggiungi endpoint per la funzione heuristic
+app.post("/run-heuristic", (req, res) => {
+    let depth, heuristic_d, random_d;
+    //depth = parseInt(document.getElementById('depth').value);
+    //heuristic_d = parseInt(document.getElementById('heuristic_d').value);
+    //random_d = parseInt(document.getElementById('random_d').value);
+
+    depth = req.body.depth;
+    heuristic_d = req.body.heuristic_d;
+    random_d = req.body.random_d;
+    let startTime = Date.now(); // Registra il tempo di inizio
+    let s_l = req.body.s_links;
+    let t_l = req.body.t_links;
+    let link = req.body.links;
+    //prendi jrootS da tree_data.json
+    let jrootS = JSON.parse(JSON.parse(fs.readFileSync('public/tree_data.json')).s_tree);
+    let jrootT = JSON.parse(JSON.parse(fs.readFileSync('public/tree_data.json')).t_tree);
+    let rootS = new Node();
+    let rootT = new Node();
+    rebuildTree(jrootS, rootS);
+    rebuildTree(jrootT, rootT);
+    
+    let rand_call = 0;
+    swapped = false;
+    let best = Infinity;
+
+    let c_ind = p_ind = 0;
+    let bestTrees = [];
+    //for (let i = 0; i < depth && best > 0; i++) {
+    while(c_ind - p_ind < depth && best > 0) {
+        binarize_tree(rootS, c_ind, s_l);
+        binarize_tree(rootT, c_ind, t_l);
+        c_ind++;
+        cur_ind = prev_ind = 0;
+        //for (let j = 0; j < heuristic_d; j++) {
+        while (cur_ind - prev_ind < heuristic_d && best > 0) {
+            cur_ind++;
+            let sigma = get_linear_order(rootS);
+            let tau_order = get_tau_indexes(rootT, sigma, link);
+            set_ranges_on_tree(rootS);
+            compute_crossings(rootS, tau_order);
+            let bestRootS = cloneTree(rootS);
+            let bestRootT = cloneTree(rootT);
+            de_binarize_tree(bestRootS);
+            de_binarize_tree(bestRootT);
+            sigma = get_linear_order(bestRootS);
+            tau_order = get_tau_indexes(bestRootT, sigma, link);
+            let temp_nc = n_crossings(sigma, tau_order);
+            if (temp_nc < best) {
+                prev_ind = cur_ind;
+                p_ind = c_ind;
+                best = temp_nc;
+                bestTrees.push({swapped:swapped, rootS: JSON.stringify(bestRootS, null, 2), rootT: JSON.stringify(bestRootT, null, 2), links: link, time: Date.now() - startTime , crossings: best, optimal: false});
+            }
+            [s_l, t_l] = [t_l, s_l];
+            [rootS, rootT] = [rootT, rootS];
+            link = Object.fromEntries(Object.entries(link).map(([k, v]) => [v, k]));
+            swapped = !swapped;
+            // Cede il controllo per aggiornare la UI ogni tot iterazioni
+            //await new Promise(resolve => setTimeout(resolve, 0));
+        }
+        de_binarize_tree(rootS);
+        de_binarize_tree(rootT);
+        if (++rand_call === random_d) {
+            sigma = get_linear_order(rootS);
+            tau_order = get_tau_indexes(rootT, sigma, link);
+            tau = get_linear_order(rootT);
+            set_standard_dev(rootT, tau, tau_order); // Call set_standard_dev
+            randomly_swap_children(rootT); // Pass tau and tau_orders
+            rand_call = 0;
+        }
+    }
+    res.json({bestTrees});
+});
+
+
+
 // Start the server
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

@@ -1,6 +1,6 @@
 // Tree-related functions extracted from kanaglegram.js
 let leaf_value_counter = 0;
-let max_depth = 0; // Profondità massima dell'albero
+const max_depth = 4; // Profondità massima dell'albero
 let L = []; // Lista dei collegamenti tra i nodi
 let bestTrees = []; // Array per memorizzare i migliori alberi trovati
 let currentBestIndex = 0; // Indice dell'albero migliore corrente
@@ -220,10 +220,13 @@ const n_crossings = (sigma, tau_orders) => {
     // Poiché ogni intersezione è contata due volte, divide il totale per 2
     return totalCrossings / 2;
 }
-const create_random_tree = (root, depth, max_children) => {
+
+let n_children = 0;
+const create_random_tree = (root, depth, max_children, n_leafs) => {
     // Crea un albero casuale dato una profondità e un numero massimo di figli
     if (depth == 0) {
         root.value = `${leaf_value_counter++}`;
+        n_children++;
         Node.set_id_counter(root);
         return;
     }
@@ -231,9 +234,11 @@ const create_random_tree = (root, depth, max_children) => {
     let n_children = Math.floor(Math.random() * max_children) + 1;
     for (let i = 0; i < n_children; i++) {
         let n = new Node();
-        create_random_tree(n, depth - 1, max_children);
+        create_random_tree(n, depth - 1, max_children, n_leafs);
+        if (n_children == n_leafs) {break;}
         new_children.push(n);
     }
+    if(new_children.length == 0){console.log('problemaaa');}
     root.set_children(new_children);
 };
 
@@ -264,9 +269,13 @@ const cloneTree = node => {
 
 // Recreate the tree structure by converting the JSON objects back to Node instances
 const rebuildTree = (json, node) => {
-    node.value = json.value;
-    node.id = json.id;
-    node.splitted = json.splitted;
+    if(json.value){node.value = json.value;}
+    if(json.id){node.id = json.id;}
+    if(json.splitted){node.splitted = json.splitted;}
+    if(json.standard_dev){node.standard_dev = json.standard_dev;}
+    if(json.depth){node.depth = json.depth;}
+    if(json.min_bound){node.min_bound = json.min_bound;}
+    if(json.max_bound){node.max_bound = json.max_bound;}
                             
     if (json.children && json.children.length > 0) {
         json.children.forEach(childJson => {
