@@ -24,6 +24,8 @@ with open(json_path, 'r') as file:
 
 # Creazione del modello
 model = Model("Vincoli condizionali")
+model.Params.MemLimit = 1024 * 1024 * 1024 * 10 # 10 GB
+
 
 # Aggiunta delle variabili xs, xt, ..., xn - use name parameter directly when creating variables
 xs = model.addVars(s_leafs, s_leafs, vtype=GRB.BINARY)
@@ -108,18 +110,15 @@ model.addConstrs((xt[h, i] == xt[h, j] for h in range(t_leafs) for i in range(h+
 # create dictionary c with keys i-j-k-l 
 c = model.addVars(s_leafs, s_leafs, t_leafs, t_leafs, vtype=GRB.BINARY)
 
-for i in range(s_leafs):
-    for j in range(s_leafs):
-        for k in range(t_leafs):
-            for l in range(t_leafs):
-                if f'arco_{i}_{k+s_leafs}' in e and f'arco_{j}_{l+s_leafs}' in e and i != j and k != l:
-                    model.addConstr(c[i, j, k, l] == (xs[i, j]*(1-xt[k, l]) + xt[k, l]*(1-xs[i, j])))
-    
+print('adding constraints for c')
+model.addConstrs(c[i, j, k, l] == (xs[i, j]*(1-xt[k, l]) + xt[k, l]*(1-xs[i, j])) for i in range(s_leafs) for j in range(s_leafs) for k in range(t_leafs) for l in range(t_leafs) if f'arco_{i}_{k+s_leafs}' in e and f'arco_{j}_{l+s_leafs}' in e and i != j and k != l)
 # Set objective with proper variable access
 # sum all elements on dictionary c
+print('setting objective')	
 model.setObjective(sum(c[i, j, k, l] for i in range(s_leafs) for j in range(s_leafs) for k in range(t_leafs) for l in range(t_leafs)), GRB.MINIMIZE)
 
 # Ottimizzazione del modello
+print('optimizing model')
 model.optimize()
 
 # Stampa dei risultati

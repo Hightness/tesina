@@ -73,7 +73,6 @@ document.getElementById('runGurobiBtn').addEventListener('click', async () => {
     if(!alreadyRun){await setGurobi();}
 });
 
-// Initialize D3 selection after DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize SVG
     connectionsSVG = d3.select('.connections-svg');
