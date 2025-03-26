@@ -191,21 +191,21 @@ else:
 
     # Generate graphs for each group in sorted_for_graphs
     leaf_group_names = []
-    for dataset in sorted_for_graphs:leaf_group_names.append(dataset[0]["media_number_of_leafs"])
+    for dataset in sorted_for_graphs:leaf_group_names.append(dataset[int(len(dataset)/2)]["number_of_leafs"])
     make_graphs("leafs", leaf_group_names)
 
 
     sorted_data = sorted(all_data, key=lambda x: x.get('number_internal_nodes', 0))
     sorted_for_graphs = []
-    for i in range(7):sorted_matrix.append(sorted_data[i*step:(i+1)*step])
+    for i in range(7):sorted_for_graphs.append(sorted_data[i*step:(i+1)*step])
     internal_node_group_names = []
-    for dataset in sorted_for_graphs:internal_node_group_names.append(dataset[0]["media_number_internal_nodes"])
+    for dataset in sorted_for_graphs:internal_node_group_names.append(dataset[int(len(dataset)/2)]["number_internal_nodes"])
     make_graphs("internal_nodes", internal_node_group_names)
 
 
     sorted_data = sorted(all_data, key=lambda x: x.get('number_of_links', 0))
     sorted_for_graphs = []
-    for i in range(7):sorted_matrix.append(sorted_data[i*step:(i+1)*step])
+    for i in range(7):sorted_for_graphs.append(sorted_data[i*step:(i+1)*step])
     link_group_names = []
-    for dataset in sorted_for_graphs:link_group_names.append(dataset[0]["media_number_of_links"])
+    for dataset in sorted_for_graphs:link_group_names.append(dataset[int(len(dataset)/2)]["number_of_links"])
     make_graphs("links", link_group_names)
