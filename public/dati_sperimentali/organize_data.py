@@ -22,21 +22,13 @@ for json_file in json_files:
                 data = json.load(f)[1:]
                 all_data.extend(data)
 
-
-#all_data = [x for x in all_data if x["initial_crossings"] != 0]
-# set_data = []
-# for i in range(len(all_data)):
-#     if all_data[i] not in set_data:
-#         set_data.append(all_data[i])
-# all_data = set_data
 sorted_data = sorted(all_data, key=lambda x: x.get('number_of_leafs', 0))
-sorted_matrix = [[x for x in sorted_data if x['number_of_leafs'] < 20]]
-sorted_matrix.append([x for x in sorted_data if 20 <= x['number_of_leafs'] < 40])
-sorted_matrix.append([x for x in sorted_data if 40 <= x['number_of_leafs'] < 60])
-sorted_matrix.append([x for x in sorted_data if 60 <= x['number_of_leafs'] < 80])
-sorted_matrix.append([x for x in sorted_data if 80 <= x['number_of_leafs'] < 100])
-sorted_matrix.append([x for x in sorted_data if 100 <= x['number_of_leafs'] < 120])
-sorted_matrix.append([x for x in sorted_data if 120 <= x['number_of_leafs']])
+step = int(len(sorted_data)/7)
+sorted_matrix = []
+if step == 0:sorted_matrix.append(sorted_data)
+else:
+    for i in range(7):sorted_matrix.append(sorted_data[i*step:(i+1)*step])
+
 sorted_for_graphs = sorted_matrix.copy()
 
 for i in range(len(sorted_matrix)):
@@ -45,7 +37,7 @@ for i in range(len(sorted_matrix)):
         dati_nuovi[f"media_{key}"] = round(sum([x[key] for x in sorted_matrix[i]]) / len(sorted_matrix[i]), 2)
     sorted_matrix[i].insert(0, dati_nuovi)
 
-    output_file = os.path.join(folder_path, f"sorted_by_leafs_{i*20+10}.json")
+    output_file = os.path.join(folder_path, f"sorted_by_leafs_{round(dati_nuovi["media_number_of_leafs"],0)}.json")
     with open(output_file, 'w') as f:
         json.dump(sorted_matrix[i], f, indent=2)
 
@@ -190,30 +182,22 @@ def make_graphs(name, group_names):
     plt.savefig(os.path.join(graphs_dir, f"{name}_sorted_gurobi_vs_heuristic_times_line.png"))
     plt.close()
 # Generate graphs for each group in sorted_for_graphs
-leaf_group_names = ["<20", "20-39", "40-59", "60-79", "80-99", "100-119", ">=120"]
-internal_node_group_names = ["<10", "10-14", "15-19", "20-24", "25-29", "30-34", ">=35"]
-link_group_names = ["<20", "20-39", "40-59", "60-79", "80-99", "100-119", ">=120"]
-
+leaf_group_names = []
+for dataset in sorted_for_graphs:leaf_group_names.append(dataset[0]["media_number_of_leafs"])
 make_graphs("leafs", leaf_group_names)
 
-sorted_data = sorted(all_data, key=lambda x: x.get('number_internal_nodes', 0))
-sorted_for_graphs = [[x for x in sorted_data if x['number_internal_nodes'] < 10]]
-sorted_for_graphs.append([x for x in sorted_data if 10 <= x['number_internal_nodes'] < 15])
-sorted_for_graphs.append([x for x in sorted_data if 15 <= x['number_internal_nodes'] < 20])
-sorted_for_graphs.append([x for x in sorted_data if 20 <= x['number_internal_nodes'] < 25])
-sorted_for_graphs.append([x for x in sorted_data if 25 <= x['number_internal_nodes'] < 30])
-sorted_for_graphs.append([x for x in sorted_data if 30 <= x['number_internal_nodes'] < 35])
-sorted_for_graphs.append([x for x in sorted_data if 35 <= x['number_internal_nodes']])
 
+sorted_data = sorted(all_data, key=lambda x: x.get('number_internal_nodes', 0))
+sorted_for_graphs = []
+for i in range(7):sorted_matrix.append(sorted_data[i*step:(i+1)*step])
+internal_node_group_names = []
+for dataset in sorted_for_graphs:internal_node_group_names.append(dataset[0]["media_number_internal_nodes"])
 make_graphs("internal_nodes", internal_node_group_names)
 
-sorted_data = sorted(all_data, key=lambda x: x.get('number_of_links', 0))
-sorted_for_graphs = [[x for x in sorted_data if x['number_of_links'] < 20]]
-sorted_for_graphs.append([x for x in sorted_data if 20 <= x['number_of_links'] < 40])
-sorted_for_graphs.append([x for x in sorted_data if 40 <= x['number_of_links'] < 60])
-sorted_for_graphs.append([x for x in sorted_data if 60 <= x['number_of_links'] < 80])
-sorted_for_graphs.append([x for x in sorted_data if 80 <= x['number_of_links'] < 100])
-sorted_for_graphs.append([x for x in sorted_data if 100 <= x['number_of_links'] < 120])
-sorted_for_graphs.append([x for x in sorted_data if 120 <= x['number_of_links']])
 
+sorted_data = sorted(all_data, key=lambda x: x.get('number_of_links', 0))
+sorted_for_graphs = []
+for i in range(7):sorted_matrix.append(sorted_data[i*step:(i+1)*step])
+link_group_names = []
+for dataset in sorted_for_graphs:link_group_names.append(dataset[0]["media_number_of_links"])
 make_graphs("links", link_group_names)
