@@ -26,6 +26,7 @@ with open(json_path, 'r') as file:
 model = Model("Vincoli condizionali")
 model.Params.MemLimit = 12 # 12 GB
 model.Params.NodefileStart = 11 # 11 GB 
+model.Params.LogToConsole = 1  # Enable logging
 
 
 # Aggiunta delle variabili xs, xt, ..., xn - use name parameter directly when creating variables
