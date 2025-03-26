@@ -4,6 +4,7 @@ import glob
 import matplotlib.pyplot as plt
 import numpy as np
 
+number_of_groups = 10
 folder_path = ""
 current_path = os.path.dirname(os.path.abspath(__file__)).split("/")
 for i in range(len(current_path)-1):folder_path += current_path[i] + "/"
@@ -159,7 +160,7 @@ for json_file in json_files:
                 all_data.extend(data)
 
 sorted_data = sorted(all_data, key=lambda x: x.get('number_of_leafs', 0))
-step = int(len(sorted_data)/7)
+step = int(len(sorted_data)/number_of_groups)
 sorted_matrix = []
 if step == 0:
     print('errore madornale, troppi pochi dati')
@@ -197,7 +198,7 @@ else:
 
     sorted_data = sorted(all_data, key=lambda x: x.get('number_internal_nodes', 0))
     sorted_for_graphs = []
-    for i in range(7):sorted_for_graphs.append(sorted_data[i*step:(i+1)*step])
+    for i in range(number_of_groups):sorted_for_graphs.append(sorted_data[i*step:(i+1)*step])
     internal_node_group_names = []
     for dataset in sorted_for_graphs:internal_node_group_names.append(dataset[int(len(dataset)/2)]["number_internal_nodes"])
     make_graphs("internal_nodes", internal_node_group_names)
@@ -205,7 +206,7 @@ else:
 
     sorted_data = sorted(all_data, key=lambda x: x.get('number_of_links', 0))
     sorted_for_graphs = []
-    for i in range(7):sorted_for_graphs.append(sorted_data[i*step:(i+1)*step])
+    for i in range(number_of_groups):sorted_for_graphs.append(sorted_data[i*step:(i+1)*step])
     link_group_names = []
     for dataset in sorted_for_graphs:link_group_names.append(dataset[int(len(dataset)/2)]["number_of_links"])
     make_graphs("links", link_group_names)
