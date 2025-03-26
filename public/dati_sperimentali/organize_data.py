@@ -29,7 +29,6 @@ for json_file in json_files:
 #     if all_data[i] not in set_data:
 #         set_data.append(all_data[i])
 # all_data = set_data
-
 sorted_data = sorted(all_data, key=lambda x: x.get('number_of_leafs', 0))
 sorted_matrix = [[x for x in sorted_data if x['number_of_leafs'] < 20]]
 sorted_matrix.append([x for x in sorted_data if 20 <= x['number_of_leafs'] < 40])

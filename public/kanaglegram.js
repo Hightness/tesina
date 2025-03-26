@@ -62,6 +62,7 @@ async function setGurobi() {
             optimal: true
         });
     } catch (error) {
+        console.log(error);	
         enableAllButtons(); // Re-enable all buttons
         return false;
     }
@@ -129,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(scrollTimeout);
         scrollTimeout = setTimeout(() => {
             updateSVGPosition();
-        }, 50);
+        }, 10);
     };
     
     // Add scroll listeners
@@ -174,35 +175,36 @@ const automaticRun = async () => {
         document.getElementById('titolo').style.color = 'teal';
         document.getElementById('titolo').innerText = `Automatic Run ${n_start - n + 1}, running Gurobi`;
         let esito = await setGurobi();
-        if (!esito) {continue;}
-        await showNextBestTree(0);
+        if (esito) {
+            await showNextBestTree(0);
 
-        let number_of_leafs = get_linear_order(bestTrees.at(-1).rootS).length;
-        number_of_leafs += get_linear_order(bestTrees.at(-1).rootT).length;
+            let number_of_leafs = get_linear_order(bestTrees.at(-1).rootS).length;
+            number_of_leafs += get_linear_order(bestTrees.at(-1).rootT).length;
 
-        let number_internal_nodes = get_internal_nodes(bestTrees.at(-1).rootS);
-        number_internal_nodes += get_internal_nodes(bestTrees.at(-1).rootT);
+            let number_internal_nodes = get_internal_nodes(bestTrees.at(-1).rootS);
+            number_internal_nodes += get_internal_nodes(bestTrees.at(-1).rootT);
 
-        let json_data = {
-            initial_crossings: bestTrees.at(0).crossings,
-            heuristic_time: heuristic_time,
-            heuristic_crossings: heuristic_crossings,
-            gurobi_time: bestTrees.at(-1).time,
-            gurobi_crossings: bestTrees.at(-1).crossings,
-            number_of_leafs: number_of_leafs,
-            number_internal_nodes: number_internal_nodes,
-            number_of_links: Object.keys(bestTrees.at(-1).links).length
-        };
+            let json_data = {
+                initial_crossings: bestTrees.at(0).crossings,
+                heuristic_time: heuristic_time,
+                heuristic_crossings: heuristic_crossings,
+                gurobi_time: bestTrees.at(-1).time,
+                gurobi_crossings: bestTrees.at(-1).crossings,
+                number_of_leafs: number_of_leafs,
+                number_internal_nodes: number_internal_nodes,
+                number_of_links: Object.keys(bestTrees.at(-1).links).length
+            };
 
-        let jsonString = JSON.stringify(json_data, null, 2);
-        await fetch('/save_results', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: jsonString
-        });
-        n--;
+            let jsonString = JSON.stringify(json_data, null, 2);
+            await fetch('/save_results', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: jsonString
+            });
+            n--;
+        }
     }
 
     document.getElementById('titolo').style.color = 'rgb(236, 223, 204)';
@@ -286,7 +288,7 @@ const drawConnections = links => {
             document.getElementById('crossings').style.backgroundColor = 'rgb(60, 61, 55)';
         }
     }catch(error){
-        console.log(error);
+        //console.log(error);
     }
 }
 
@@ -455,7 +457,7 @@ const showNextBestTree = async (n) => {
         
         // Draw the connections
         drawConnections(links);
-    }, 50);
+    }, 10);
 }
 
 // Funzione per iniziare la visualizzazione e attendere il completamento dell'euristica

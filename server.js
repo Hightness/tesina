@@ -82,7 +82,7 @@ app.post('/save_results', (req, res) => {
         res.status(200).send('Data saved successfully');
     } catch (error) {
         console.error('Error saving data:', error);
-        res.status(500).send('Error saving data: ' + error.message);
+        res.status(200).send('too much memory: ' + error.message);
     }
 
     exec("python public/dati_sperimentali/organize_data.py", (error, stdout, stderr) => {
