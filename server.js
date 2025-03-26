@@ -84,17 +84,6 @@ app.post('/save_results', (req, res) => {
         console.error('Error saving data:', error);
         res.status(200).send('too much memory: ' + error.message);
     }
-
-    exec("python public/dati_sperimentali/organize_data.py", (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Errore: ${error.message}`);
-            return res.status(500).send(`Errore: ${error.message}`);
-        }
-        if (stderr) {
-            console.error(`Stderr: ${stderr}`);
-            return res.status(500).send(`Stderr: ${stderr}`);
-        }
-    });
 });
 
 
@@ -134,6 +123,17 @@ app.post('/store_results', (req, res) => {
 
     //delete old file json in the path public/automatic_run.json
     fs.rmSync('public/automatic_run.json');
+
+    exec("python public/dati_sperimentali/organize_data.py", (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Errore: ${error.message}`);
+            return res.status(500).send(`Errore: ${error.message}`);
+        }
+        if (stderr) {
+            console.error(`Stderr: ${stderr}`);
+            return res.status(500).send(`Stderr: ${stderr}`);
+        }
+    });
 });
 
 //aggiungi endpoint per la funzione heuristic
