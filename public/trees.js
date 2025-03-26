@@ -95,7 +95,7 @@ const normalize_leafs = (root, links) => {
 //restituisce il numero di nodi interni
 const get_internal_nodes = (root) => {
     let count = 0;
-    if (root.children.length === 0) return 0;
+    if (root.children.value != null) return 0;
     if (root.children.length === 1) return get_internal_nodes(root.children[0]);
     for (let c of root.children) count += get_internal_nodes(c);
     return count + 1;

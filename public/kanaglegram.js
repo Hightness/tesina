@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(scrollTimeout);
         scrollTimeout = setTimeout(() => {
             updateSVGPosition();
-        }, 1);
+        }, 50);
     };
     
     // Add scroll listeners
@@ -275,14 +275,18 @@ const drawConnections = links => {
         //if(count - 1 > 1)connectionsSVG.append('text').attr('class', 'circle').attr('x', x).attr('y', y).attr('dy', -2).text(count - 1);
     });
 
-    document.getElementById('crossings').innerText = `Crossings: ${bestTrees[currentBestIndex].crossings} | Time: ${bestTrees[currentBestIndex].time} ms`;
-    document.getElementById('crossings').style.color = 'rgb(236, 223, 204)';
-    document.getElementById('crossings').style.backgroundColor = 'rgb(105, 117, 101)';
-    if (bestTrees[currentBestIndex].optimal) {
-        document.getElementById('crossings').innerText = `Crossings: ${bestTrees[currentBestIndex].crossings} | Time: ${bestTrees[currentBestIndex].time/1000} s`;
-        document.getElementById('crossings').style.color = 'teal';
-        //change backgroundcolor to darkgreen if optimal solution
-        document.getElementById('crossings').style.backgroundColor = 'rgb(60, 61, 55)';
+    try{
+        document.getElementById('crossings').innerText = `Crossings: ${bestTrees[currentBestIndex].crossings} | Time: ${bestTrees[currentBestIndex].time} ms`;
+        document.getElementById('crossings').style.color = 'rgb(236, 223, 204)';
+        document.getElementById('crossings').style.backgroundColor = 'rgb(105, 117, 101)';
+        if (bestTrees[currentBestIndex].optimal) {
+            document.getElementById('crossings').innerText = `Crossings: ${bestTrees[currentBestIndex].crossings} | Time: ${bestTrees[currentBestIndex].time/1000} s`;
+            document.getElementById('crossings').style.color = 'teal';
+            //change backgroundcolor to darkgreen if optimal solution
+            document.getElementById('crossings').style.backgroundColor = 'rgb(60, 61, 55)';
+        }
+    }catch(error){
+        console.log(error);
     }
 }
 

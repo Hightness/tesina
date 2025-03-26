@@ -62,7 +62,6 @@ app.post("/run-python", (req, res) => {
 app.post('/save_results', (req, res) => {
     try {
         // Log to debug
-        console.log('Received POST request to /save_results');
         // The data is already available in req.body due to express.json() middleware
         const treeData = req.body;
         //add req.body to json array in treeData.file_name
@@ -80,12 +79,22 @@ app.post('/save_results', (req, res) => {
             JSON.stringify(old_data, null, 2)
         );
         
-        console.log('Data of the automatic run saved ');
         res.status(200).send('Data saved successfully');
     } catch (error) {
         console.error('Error saving data:', error);
         res.status(500).send('Error saving data: ' + error.message);
     }
+
+    exec("python public/dati_sperimentali/organize_data.py", (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Errore: ${error.message}`);
+            return res.status(500).send(`Errore: ${error.message}`);
+        }
+        if (stderr) {
+            console.error(`Stderr: ${stderr}`);
+            return res.status(500).send(`Stderr: ${stderr}`);
+        }
+    });
 });
 
 
@@ -93,7 +102,6 @@ app.post('/save_results', (req, res) => {
 app.post('/save_data', (req, res) => {
     try {
         // Log to debug
-        console.log('Received POST request to /save_data');
         
         // The data is already available in req.body due to express.json() middleware
         const treeData = req.body;
@@ -104,7 +112,6 @@ app.post('/save_data', (req, res) => {
             JSON.stringify(treeData, null, 2)
         );
         
-        console.log('Data saved to tree_data.json');
         res.status(200).send('Data saved successfully');
     } catch (error) {
         console.error('Error saving data:', error);
