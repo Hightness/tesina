@@ -5,8 +5,7 @@ const app = express();
 const port = 3000;
 const { exec } = require("child_process");
 //import all functions from trees.js inside public/trees.js
-const {Node, rebuildTree, binarize_tree, cloneTree, de_binarize_tree, get_linear_order, get_tau_indexes, set_ranges_on_tree, compute_crossings, n_crossings, set_standard_dev, randomly_swap_children} = require('./public/trees.js');
-
+const { set_leaf_value_counter, Node, create_random_tree, create_random_links, rebuildTree, binarize_tree, cloneTree, de_binarize_tree, get_linear_order, get_tau_indexes, set_ranges_on_tree, compute_crossings, n_crossings, set_standard_dev, randomly_swap_children, set_links } = require('./public/trees.js');
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -86,28 +85,6 @@ app.post('/save_results', (req, res) => {
     }
 });
 
-
-// Update the endpoint to handle POST requests properly
-app.post('/save_data', (req, res) => {
-    try {
-        // Log to debug
-        
-        // The data is already available in req.body due to express.json() middleware
-        const treeData = req.body;
-        
-        // Save to file
-        fs.writeFileSync(
-            path.join(__dirname, 'public', 'tree_data.json'), 
-            JSON.stringify(treeData, null, 2)
-        );
-        
-        res.status(200).send('Data saved successfully');
-    } catch (error) {
-        console.error('Error saving data:', error);
-        res.status(500).send('Error saving data: ' + error.message);
-    }
-});
-
 app.post('/store_results', (req, res) => {
     //move the tree_data.json to the dati_sperimentali folder, and add a counter to the file name
     const old_data = JSON.parse(fs.readFileSync('public/automatic_run.json'));
@@ -136,6 +113,49 @@ app.post('/store_results', (req, res) => {
     });
 });
 
+app.post('/start_visualization', (req, res) => {
+    let jsonString;
+    set_leaf_value_counter(0);
+    Node.id_counter = 0;
+    if (req.body.new_run == 0){
+        jsonString = fs.readFileSync('public/tree_data.json');
+    }else{
+        let m_c = req.body.m_c;
+        let n_connections = req.body.n_connections;
+            
+        let rootS = new Node();
+        let rootT = new Node();
+
+        create_random_tree(rootS, depth = 3, max_children = m_c); // Crea l'albero S casuale
+        create_random_tree(rootT, depth = 3, max_children = m_c); // Crea l'albero T casuale
+
+        s_leafs = get_linear_order(rootS).length;
+        t_leafs = get_linear_order(rootT).length;
+        let L = [];
+
+        create_random_links(rootS, rootT, max_links = n_connections*(s_leafs+t_leafs)/2, L); // Crea collegamenti casuali
+        let [links, s_links, t_links] = set_links(rootS, rootT, L); // Imposta i collegamenti
+
+        let s_tree = JSON.stringify(rootS, null, 2);
+        let t_tree = JSON.stringify(rootT, null, 2);
+        let treeData = {
+            s_leafs,
+            t_leafs,
+            L,
+            s_tree,
+            t_tree,
+            links,
+            s_links,
+            t_links
+        };
+
+        // Convert the data to a JSON string
+        jsonString = JSON.stringify(treeData, null, 2);
+        fs.writeFileSync(path.join(__dirname, 'public', 'tree_data.json'), jsonString);
+    }
+    res.send(jsonString);
+});
+
 //aggiungi endpoint per la funzione heuristic
 app.post("/run-heuristic", (req, res) => {
     let depth, heuristic_d, random_d;
@@ -150,7 +170,6 @@ app.post("/run-heuristic", (req, res) => {
     let s_l = req.body.s_links;
     let t_l = req.body.t_links;
     let link = req.body.links;
-    let initial_crossings = req.body.initial_crossings;
     //prendi jrootS da tree_data.json
     let jrootS = JSON.parse(JSON.parse(fs.readFileSync('public/tree_data.json')).s_tree);
     let jrootT = JSON.parse(JSON.parse(fs.readFileSync('public/tree_data.json')).t_tree);
@@ -158,13 +177,18 @@ app.post("/run-heuristic", (req, res) => {
     let rootT = new Node();
     rebuildTree(jrootS, rootS);
     rebuildTree(jrootT, rootT);
+
+    //get initial crossings
+    let sigma = get_linear_order(rootS);
+    let tau_order = get_tau_indexes(rootT, sigma, link);
+    let initial_crossings = n_crossings(sigma, tau_order);
     
     let rand_call = 0;
     swapped = false;
     let best = initial_crossings;
 
     let c_ind = p_ind = 0;
-    let bestTrees = [];
+    let bestTrees = [{swapped:false, rootS:JSON.stringify(rootS, null, 2), rootT:JSON.stringify(rootT, null, 2), links: link, time: 0, crossings: initial_crossings, optimal:false}];
     //for (let i = 0; i < depth && best > 0; i++) {
     while(c_ind - p_ind < depth && best > 0) {
         binarize_tree(rootS, c_ind, s_l);

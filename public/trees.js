@@ -1,7 +1,6 @@
 // Tree-related functions extracted from kanaglegram.js
 let leaf_value_counter = 0;
 const max_depth = 4; // Profondità massima dell'albero
-let L = []; // Lista dei collegamenti tra i nodi
 let bestTrees = []; // Array per memorizzare i migliori alberi trovati
 let currentBestIndex = 0; // Indice dell'albero migliore corrente
 
@@ -46,9 +45,9 @@ class Node {
     }
 }
 
-
-let originalS = new Node(); // Albero S originale
-let originalT = new Node(); // Albero T originale
+const set_leaf_value_counter = (n) => {
+    leaf_value_counter = n;
+}
 
 const binarize_tree = (root, seed, links) => {
     // Binarizza l'albero trasformando nodi con più di due figli
@@ -285,7 +284,7 @@ const rebuildTree = (json, node) => {
 };
 
 // Funzione per creare collegamenti casuali tra i nodi foglia di S e T
-const create_random_links = (rootS, rootT, max_links) => {
+const create_random_links = (rootS, rootT, max_links, L) => {
     const sNodes = get_linear_order(rootS);
     const tNodes = get_linear_order(rootT);
     already_seen = new Set();
@@ -494,13 +493,11 @@ if (typeof module !== 'undefined' && module.exports) {
         set_ranges_on_tree,
         get_depth,
         remove_single_child,
+        set_leaf_value_counter,
         assign_depth,
         Node,
-        L,
         bestTrees,
         currentBestIndex,
-        originalS,
-        originalT,
         max_depth,
         leaf_value_counter
 
@@ -533,12 +530,10 @@ if (typeof module !== 'undefined' && module.exports) {
         get_depth,
         remove_single_child,
         assign_depth,
+        set_leaf_value_counter,
         Node,
-        L,
         bestTrees,
         currentBestIndex,
-        originalS,
-        originalT,
         max_depth,
         leaf_value_counter
     };

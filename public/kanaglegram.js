@@ -41,8 +41,8 @@ async function setGurobi() {
         const gurobi_time = result.execution_time;
         const gurobi_crossings = parseInt(result.crossings)/2;
 
-        let clonedS = cloneTree(originalS);
-        let clonedT = cloneTree(originalT);
+        let clonedS = cloneTree(bestTrees[0].rootS);
+        let clonedT = cloneTree(bestTrees[0].rootT);
     
         set_ranges_on_tree(clonedS);
         set_ranges_on_tree(clonedT);
@@ -423,13 +423,13 @@ const showNextBestTree = async (n) => {
     let plotPromises = [];
 
     if (bestTree.swapped) {
-        swappedS = printSwappednodes(bestTree.rootT, originalS);
-        swappedT = printSwappednodes(bestTree.rootS, originalT);
+        swappedS = printSwappednodes(bestTree.rootT, bestTrees[0].rootS);
+        swappedT = printSwappednodes(bestTree.rootS, bestTrees[0].rootT);
         plotPromises.push(plot(bestTree.rootT, 'bestS', links));
         plotPromises.push(plot(bestTree.rootS, 'bestT', links));
     } else {
-        swappedT = printSwappednodes(bestTree.rootT, originalT);
-        swappedS = printSwappednodes(bestTree.rootS, originalS);
+        swappedT = printSwappednodes(bestTree.rootT, bestTrees[0].rootT);
+        swappedS = printSwappednodes(bestTree.rootS, bestTrees[0].rootS);
         plotPromises.push(plot(bestTree.rootS, 'bestS', links));
         plotPromises.push(plot(bestTree.rootT, 'bestT', links));
     }
@@ -462,8 +462,6 @@ const showNextBestTree = async (n) => {
 
 // Funzione per iniziare la visualizzazione e attendere il completamento dell'euristica
 const startVisualization = async (new_run) => {
-    // Inizializza variabili e pulisce lo schermo
-    //new_run = 1 allora nuova, 0 allora rielabora
     bestTrees = [];
     if(connectionsSVG) connectionsSVG.selectAll('*').remove();
     document.getElementById('bestS').innerHTML = '';
@@ -472,108 +470,48 @@ const startVisualization = async (new_run) => {
     document.getElementById('swappedS').innerText = `Swapped Nodes in S: `;
     document.getElementById('crossings').innerText = `Crossings: | Time: 0 ms`;
     currentBestIndex = 0;
-    Node.id_counter = 0;
     startTime = Date.now(); // Registra il tempo di inizio
 
-    let rootS = new Node();
-    let rootT = new Node();
-    leaf_value_counter = 0;
-    let s_leafs;
-    let t_leafs;
+    let m_c = parseInt(document.getElementById('max_children').value); // Numero massimo di figli
+    let n_connections = parseFloat(document.getElementById('n_connections').value); // Numero di collegamenti
         
+    let response = await fetch('/start_visualization', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({new_run:new_run, m_c:m_c, n_connections:n_connections})
+    });
+    
+    let tree_data = await response.text();
+    tree_data = JSON.parse(tree_data);
+    L = tree_data.L
+    let links = tree_data.links
+    let s_links = tree_data.s_links
+    let t_links = tree_data.t_links
+
     if(new_run > 0){
         if (new_run === 1) {
             document.title = `Running Heuristic`;
             document.getElementById('titolo').innerText = `Running Heuristic`;
         }
-        // Se è una nuova esecuzione, crea alberi casuali e collegamenti
-        let m_c, n_connections;
-        L = [];
-            
-        m_c = parseInt(document.getElementById('max_children').value); // Numero massimo di figli
-        n_connections = parseFloat(document.getElementById('n_connections').value); // Numero di collegamenti
-
-        create_random_tree(rootS, depth = 3, max_children = m_c); // Crea l'albero S casuale
-        create_random_tree(rootT, depth = 3, max_children = m_c); // Crea l'albero T casuale
-
-        s_leafs = get_linear_order(rootS).length;
-        t_leafs = get_linear_order(rootT).length;
-
-        create_random_links(rootS, rootT, max_links = n_connections*(s_leafs+t_leafs)/2); // Crea collegamenti casuali
-
-        originalS = cloneTree(rootS); // Clona l'albero S originale
-        originalT = cloneTree(rootT); // Clona l'albero T originale
-    } else if (new_run === 0) {
+    }else if (new_run === 0) {
         // Se si sta rielaborando, clona gli alberi originali
         document.title = `Re-Running Heuristic`;
         document.getElementById('titolo').innerText = `Re-Running Heuristic`;
-        if (!originalS.children || originalS.children.length === 0) {
-            alert('No trees to re-run. Please run a new heuristic first.');
-            return;
-        }
-        rootS = cloneTree(originalS);
-        rootT = cloneTree(originalT);
-        s_leafs = get_linear_order(rootS).length;
-        t_leafs = get_linear_order(rootT).length;
     }
 
-    let s_tree = JSON.stringify(originalS, null, 2);
-    let t_tree = JSON.stringify(originalT, null, 2);
-    let treeData = {
-        s_leafs,
-        t_leafs,
-        L,
-        s_tree,
-        t_tree
-    };
-
-    // Convert the data to a JSON string
-    let jsonString = JSON.stringify(treeData, null, 2);
-
-    //now post the data to the server on localhost:3000/save_data
-    await fetch('/save_data', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: jsonString
-    });
-
-    // S = [[["t0", "t1", "t2", "t3"], ["t4", "t5", "t6"]],[["t7"]],[["t8", "t9"], ["t10", "t11"], ["t12"]],[["t13", "t14"]],[["t15", "t16"]]];
-    // T = [[["b0"]],[["b1", "b2"], ["b3", "b4", "b5"], ["b6"]],[["b7", "b8"]],[["b9", "b10"], ["b11", "b12"], ["b13", "b14"]]];
-    // L = [["t0", "b0"], ["t0", "b1"], ["t0", "b2"],
-    //      ["t1", "b1"], ["t1", "b2"], ["t2", "b1"],
-    //      ["t2", "b2"], ["t2", "b6"], ["t3", "b1"],
-    //      ["t3", "b2"], ["t3", "b6"], ["t4", "b5"],
-    //      ["t5", "b4"], ["t5", "b1"], ["t6", "b0"],
-    //      ["t7", "b0"], ["t8", "b11"], ["t8", "b12"],
-    //      ["t10", "b9"], ["t11", "b9"], ["t13", "b6"],
-    //      ["t14", "b6"], ["t15", "b7"], ["t16", "b8"]];
-    // create_tree(rootS, S);
-    // create_tree(rootT, T);
-
-    [links, s_links, t_links] = set_links(rootS, rootT, L); // Imposta i collegamenti
-
-    binarize_tree(rootS, 0, s_links); // Binarizza l'albero S
-    binarize_tree(rootT, 0, t_links); // Binarizza l'albero T
-
-    //heuristic(rootS, rootT, s_links, t_links, links); // Esegue l'algoritmo euristico
-    //make post call to run-heuristic
     let d = parseInt(document.getElementById('depth').value);
     let heuristic_d = parseInt(document.getElementById('heuristic_d').value);
     let random_d = parseInt(document.getElementById('random_d').value);
     disableAllButtons();
-    //get initial crossings
-    let sigma = get_linear_order(originalS);
-    let tau_order = get_tau_indexes(originalT, sigma, links);
-    let initial_crossings = n_crossings(sigma, tau_order);
 
-    let response = await fetch('/run-heuristic', {
+    response = await fetch('/run-heuristic', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({depth: d, heuristic_d: heuristic_d, random_d: random_d, s_links: s_links, t_links: t_links, links: links, initial_crossings: initial_crossings})
+        body: JSON.stringify({depth: d, heuristic_d: heuristic_d, random_d: random_d, s_links: s_links, t_links: t_links, links: links})
     });
     bestTrees = await response.json();
     bestTrees = bestTrees['bestTrees'];
@@ -585,10 +523,6 @@ const startVisualization = async (new_run) => {
         data.rootS = tempS;
         data.rootT = tempT;
     });
-
-
-    //insert originalS at the start of bestTrees
-    bestTrees.unshift({swapped: false, rootS: originalS, rootT: originalT, links: links, time: 0, crossings: initial_crossings, optimal: false});
 
     enableAllButtons();
     showNextBestTree(0);

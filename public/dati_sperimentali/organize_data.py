@@ -9,46 +9,6 @@ folder_path = os.path.dirname(os.path.abspath(__file__))
 json_files = glob.glob(os.path.join(folder_path, "*.json"))
 all_data = []
 
-# Read and load each JSON file
-for json_file in json_files:
-    with open(json_file, 'r') as f:
-        if "automatic_run" in os.path.basename(json_file):
-            data = json.load(f)
-            all_data.extend(data)
-            print(f"Loaded data from {json_file}")
-
-        elif "sorted_by_leafs" in os.path.basename(json_file):
-            with open(json_file, 'r') as f:
-                data = json.load(f)[1:]
-                all_data.extend(data)
-
-sorted_data = sorted(all_data, key=lambda x: x.get('number_of_leafs', 0))
-step = int(len(sorted_data)/7)
-sorted_matrix = []
-if step == 0:sorted_matrix.append(sorted_data)
-else:
-    for i in range(7):sorted_matrix.append(sorted_data[i*step:(i+1)*step])
-
-sorted_for_graphs = sorted_matrix.copy()
-
-for i in range(len(sorted_matrix)):
-    dati_nuovi = {}
-    for key in sorted_matrix[i][0].keys():
-        dati_nuovi[f"media_{key}"] = round(sum([x[key] for x in sorted_matrix[i]]) / len(sorted_matrix[i]), 2)
-    sorted_matrix[i].insert(0, dati_nuovi)
-
-    output_file = os.path.join(folder_path, f"sorted_by_leafs_{round(dati_nuovi["media_number_of_leafs"],0)}.json")
-    with open(output_file, 'w') as f:
-        json.dump(sorted_matrix[i], f, indent=2)
-
-for json_file in json_files:
-    if "automatic_run" in os.path.basename(json_file):os.remove(json_file)
-
-# Create graphs directory if it doesn't exist
-graphs_dir = os.path.join(folder_path, "graphs")
-if not os.path.exists(graphs_dir):
-    os.makedirs(graphs_dir)
-
 def make_graphs(name, group_names):
 
     # Separate data into Gurobi and heuristic results
@@ -181,23 +141,68 @@ def make_graphs(name, group_names):
     plt.grid(True, linestyle='--', alpha=0.7)
     plt.savefig(os.path.join(graphs_dir, f"{name}_sorted_gurobi_vs_heuristic_times_line.png"))
     plt.close()
-# Generate graphs for each group in sorted_for_graphs
-leaf_group_names = []
-for dataset in sorted_for_graphs:leaf_group_names.append(dataset[0]["media_number_of_leafs"])
-make_graphs("leafs", leaf_group_names)
+
+# Read and load each JSON file
+for json_file in json_files:
+    with open(json_file, 'r') as f:
+        if "automatic_run" in os.path.basename(json_file):
+            data = json.load(f)
+            all_data.extend(data)
+            print(f"Loaded data from {json_file}")
+
+        elif "sorted_by_leafs" in os.path.basename(json_file):
+            with open(json_file, 'r') as f:
+                data = json.load(f)[1:]
+                all_data.extend(data)
+
+sorted_data = sorted(all_data, key=lambda x: x.get('number_of_leafs', 0))
+step = int(len(sorted_data)/7)
+sorted_matrix = []
+if step == 0:
+    print('errore madornale, troppi pochi dati')
+else:
+    for i in range(6):sorted_matrix.append(sorted_data[i*step:(i+1)*step])
+    sorted_matrix.append(sorted_data[6*step:])
+    sorted_for_graphs = sorted_matrix.copy()
+
+    for json_file in json_files:
+        if "sorted_by_leafs" in os.path.basename(json_file):os.remove(json_file)
+
+    for i in range(len(sorted_matrix)):
+        dati_nuovi = {}
+        for key in sorted_matrix[i][0].keys():
+            dati_nuovi[f"media_{key}"] = round(sum([x[key] for x in sorted_matrix[i]]) / len(sorted_matrix[i]), 2)
+        sorted_matrix[i].insert(0, dati_nuovi)
+
+        output_file = os.path.join(folder_path, f"sorted_by_leafs_{round(dati_nuovi["media_number_of_leafs"],0)}.json")
+        with open(output_file, 'w') as f:
+            json.dump(sorted_matrix[i], f, indent=2)
+
+    for json_file in json_files:
+        if "automatic_run" in os.path.basename(json_file):os.remove(json_file)
+
+    # Create graphs directory if it doesn't exist
+    graphs_dir = os.path.join(folder_path, "graphs")
+    if not os.path.exists(graphs_dir):
+        os.makedirs(graphs_dir)
+
+    # Generate graphs for each group in sorted_for_graphs
+    leaf_group_names = []
+    for dataset in sorted_for_graphs:leaf_group_names.append(dataset[0]["media_number_of_leafs"])
+    make_graphs("leafs", leaf_group_names)
 
 
-sorted_data = sorted(all_data, key=lambda x: x.get('number_internal_nodes', 0))
-sorted_for_graphs = []
-for i in range(7):sorted_matrix.append(sorted_data[i*step:(i+1)*step])
-internal_node_group_names = []
-for dataset in sorted_for_graphs:internal_node_group_names.append(dataset[0]["media_number_internal_nodes"])
-make_graphs("internal_nodes", internal_node_group_names)
+    sorted_data = sorted(all_data, key=lambda x: x.get('number_internal_nodes', 0))
+    sorted_for_graphs = []
+    for i in range(7):sorted_matrix.append(sorted_data[i*step:(i+1)*step])
+    internal_node_group_names = []
+    for dataset in sorted_for_graphs:internal_node_group_names.append(dataset[0]["media_number_internal_nodes"])
+    make_graphs("internal_nodes", internal_node_group_names)
 
 
-sorted_data = sorted(all_data, key=lambda x: x.get('number_of_links', 0))
-sorted_for_graphs = []
-for i in range(7):sorted_matrix.append(sorted_data[i*step:(i+1)*step])
-link_group_names = []
-for dataset in sorted_for_graphs:link_group_names.append(dataset[0]["media_number_of_links"])
-make_graphs("links", link_group_names)
+    sorted_data = sorted(all_data, key=lambda x: x.get('number_of_links', 0))
+    sorted_for_graphs = []
+    for i in range(7):sorted_matrix.append(sorted_data[i*step:(i+1)*step])
+    link_group_names = []
+    for dataset in sorted_for_graphs:link_group_names.append(dataset[0]["media_number_of_links"])
+    make_graphs("links", link_group_names)
