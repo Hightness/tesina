@@ -6,7 +6,7 @@ import numpy as np
 
 folder_path = ""
 current_path = os.path.dirname(os.path.abspath(__file__)).split("/")
-for i in range(len(current_path)-2):folder_path += current_path[i] + "/"
+for i in range(len(current_path)-1):folder_path += current_path[i] + "/"
 folder_path += "public/dati_sperimentali"
 
 json_files = glob.glob(os.path.join(folder_path, "*.json"))
