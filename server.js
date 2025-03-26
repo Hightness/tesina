@@ -1,4 +1,5 @@
 const express = require('express');
+const archiver = require('archiver');
 const path = require("path");
 const fs = require('fs'); // Add fs module to read files
 const app = express();
@@ -15,6 +16,32 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get("/", (req, res) => {
     const htmlFilePath = path.join(__dirname, "views", "index.html");
     res.sendFile(htmlFilePath);
+});
+
+app.post("/download", (req, res) => {
+    const sourceDir = path.join(__dirname, 'public', 'dati_sperimentali');
+    const zipPath = path.join(__dirname, 'dati_sperimentali.zip');
+    const createZip = new Promise((resolve, reject) => {
+        const output = fs.createWriteStream(zipPath);
+        const archive = archiver('zip', { 
+            zlib: { level: 9 } // Maximum compression
+        });
+
+        output.on('close', () => {
+            console.log(`ZIP created successfully (${archive.pointer()} bytes)`);
+            resolve();
+        });
+        archive.pipe(output);
+        archive.directory(sourceDir, false);
+        archive.finalize();
+    });
+    createZip.then(() => {
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Disposition', 'attachment; filename=dati_sperimentali.zip');
+        res.setHeader('Content-Length', fs.statSync(zipPath).size);
+
+        res.download('dati_sperimentali.zip');
+    });
 });
 
 // Endpoint per eseguire lo script Python e riordinare gli alberi

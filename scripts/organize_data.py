@@ -3,9 +3,8 @@ import json
 import glob
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 
-folder_path = os.path.dirname(os.path.abspath(__file__))
+folder_path = os.path.dirname(os.path.abspath(__file__)) + "\\..\\public\\dati_sperimentali"
 json_files = glob.glob(os.path.join(folder_path, "*.json"))
 all_data = []
 

@@ -71,6 +71,21 @@ async function setGurobi() {
   return true;
 }
 
+document.getElementById('downloadBtn').addEventListener('click', async () => {
+    response = await fetch('/download', {method: 'POST'});
+    const blob = await response.blob();
+    let link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'dati_sperimentali.zip'; // Name of the file to download
+ 
+    // Trigger the download
+    link.click();
+ 
+    // Clean up
+    URL.revokeObjectURL(link.href);
+
+});
+
 document.getElementById('runGurobiBtn').addEventListener('click', async () => {
     let alreadyRun = false;
     bestTrees.forEach(tree => {
