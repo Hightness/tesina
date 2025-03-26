@@ -4,7 +4,11 @@ import glob
 import matplotlib.pyplot as plt
 import numpy as np
 
-folder_path = os.path.dirname(os.path.abspath(__file__)) + "\\..\\public\\dati_sperimentali"
+folder_path = ""
+current_path = os.path.dirname(os.path.abspath(__file__)).split("/")
+for i in range(len(current_path)-2):folder_path += current_path[i] + "/"
+folder_path += "public/dati_sperimentali"
+
 json_files = glob.glob(os.path.join(folder_path, "*.json"))
 all_data = []
 

@@ -128,7 +128,7 @@ app.post('/store_results', (req, res) => {
     //delete old file json in the path public/automatic_run.json
     fs.rmSync('public/automatic_run.json');
 
-    exec("python public/dati_sperimentali/organize_data.py", (error, stdout, stderr) => {
+    exec("python scripts/organize_data.py", (error, stdout, stderr) => {
         if (error) {
             console.error(`Errore: ${error.message}`);
             return res.status(500).send(`Errore: ${error.message}`);
