@@ -55,7 +55,7 @@ def make_graphs(name, group_names):
     plt.bar(index, gurobi_crossings_values, bar_width, label='Gurobi Crossings', color='blue', alpha=0.7)
     plt.bar(index + bar_width, heuristic_crossings_values, bar_width, label='Heuristic Crossings', color='green', alpha=0.7)
 
-    plt.xlabel(f'Number of {name}')
+    plt.xlabel(f'Number of {name}, ({step} entries per group)')
     plt.ylabel('Average Crossings')
     plt.title('Comparison of Gurobi vs Heuristic Crossings')
     plt.xticks(index + bar_width/2, group_names)
@@ -83,7 +83,7 @@ def make_graphs(name, group_names):
     plt.bar(index, gurobi_times, bar_width, label='Gurobi Execution Time', color='blue', alpha=0.7)
     plt.bar(index + bar_width, heuristic_times, bar_width, label='Heuristic Execution Time', color='green', alpha=0.7)
 
-    plt.xlabel(f'Number of {name}')
+    plt.xlabel(f'Number of {name}, ({step} entries per group)')
     plt.ylabel('Average Execution Time (s)')
     plt.title('Comparison of Gurobi vs Heuristic Execution Times')
     plt.xticks(index + bar_width/2, group_names)
@@ -110,7 +110,7 @@ def make_graphs(name, group_names):
     plt.fill_between(x_positions, gurobi_crossings_values, alpha=0.1, color='blue')
     plt.fill_between(x_positions, heuristic_crossings_values, alpha=0.1, color='green')
 
-    plt.xlabel(f'Number of {name}')
+    plt.xlabel(f'Number of {name}, ({step} entries per group)')
     plt.ylabel('Average Crossings')
     plt.title(f'Trend of Gurobi vs Heuristic Crossings by {name.capitalize()}')
     plt.xticks(x_positions, group_names)
@@ -137,7 +137,7 @@ def make_graphs(name, group_names):
         plt.annotate(f"{h_time:.2f}s", (i, h_time), textcoords="offset points", 
                      xytext=(0,-15), ha='center', color='green', fontweight='bold')
 
-    plt.xlabel(f'Number of {name}')
+    plt.xlabel(f'Number of {name}, ({step} entries per group)')
     plt.ylabel('Average Execution Time (s)')
     plt.title(f'Trend of Gurobi vs Heuristic Execution Times by {name.capitalize()}')
     plt.xticks(x_positions, group_names)
@@ -178,7 +178,7 @@ else:
             dati_nuovi[f"media_{key}"] = round(sum([x[key] for x in sorted_matrix[i]]) / len(sorted_matrix[i]), 2)
         sorted_matrix[i].insert(0, dati_nuovi)
 
-        output_file = os.path.join(folder_path, f"sorted_by_leafs_{round(dati_nuovi["media_number_of_leafs"],0)}.json")
+        output_file = os.path.join(folder_path, f"sorted_by_leafs_{round(dati_nuovi["media_number_of_leafs"])}.json")
         with open(output_file, 'w') as f:
             json.dump(sorted_matrix[i], f, indent=2)
 
@@ -192,7 +192,7 @@ else:
 
     # Generate graphs for each group in sorted_for_graphs
     leaf_group_names = []
-    for dataset in sorted_for_graphs:leaf_group_names.append(dataset[int(len(dataset)/2)]["number_of_leafs"])
+    for dataset in sorted_for_graphs:leaf_group_names.append(round(dataset[int(len(dataset)/2)]["number_of_leafs"]))
     make_graphs("leafs", leaf_group_names)
 
 
@@ -200,7 +200,7 @@ else:
     sorted_for_graphs = []
     for i in range(number_of_groups):sorted_for_graphs.append(sorted_data[i*step:(i+1)*step])
     internal_node_group_names = []
-    for dataset in sorted_for_graphs:internal_node_group_names.append(dataset[int(len(dataset)/2)]["number_internal_nodes"])
+    for dataset in sorted_for_graphs:internal_node_group_names.append(round(dataset[int(len(dataset)/2)]["number_internal_nodes"]))
     make_graphs("internal_nodes", internal_node_group_names)
 
 
@@ -208,5 +208,5 @@ else:
     sorted_for_graphs = []
     for i in range(number_of_groups):sorted_for_graphs.append(sorted_data[i*step:(i+1)*step])
     link_group_names = []
-    for dataset in sorted_for_graphs:link_group_names.append(dataset[int(len(dataset)/2)]["number_of_links"])
+    for dataset in sorted_for_graphs:link_group_names.append(round(dataset[int(len(dataset)/2)]["number_of_links"]))
     make_graphs("links", link_group_names)
