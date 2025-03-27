@@ -4,7 +4,7 @@ import glob
 import matplotlib.pyplot as plt
 import numpy as np
 
-number_of_groups = 10
+number_of_groups = 20
 folder_path = ""
 current_path = os.path.dirname(os.path.abspath(__file__)).split("/")
 for i in range(len(current_path)-1):folder_path += current_path[i] + "/"
@@ -165,8 +165,8 @@ sorted_matrix = []
 if step == 0:
     print('errore madornale, troppi pochi dati')
 else:
-    for i in range(6):sorted_matrix.append(sorted_data[i*step:(i+1)*step])
-    sorted_matrix.append(sorted_data[6*step:])
+    for i in range(number_of_groups-1):sorted_matrix.append(sorted_data[i*step:(i+1)*step])
+    sorted_matrix.append(sorted_data[(number_of_groups-1)*step:])
     sorted_for_graphs = sorted_matrix.copy()
 
     for json_file in json_files:
