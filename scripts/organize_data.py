@@ -4,7 +4,7 @@ import glob
 import matplotlib.pyplot as plt
 import numpy as np
 
-number_of_groups = 20
+number_of_groups = 10
 folder_path = ""
 current_path = os.path.dirname(os.path.abspath(__file__)).split("/")
 for i in range(len(current_path)-1):folder_path += current_path[i] + "/"
@@ -155,11 +155,12 @@ for json_file in json_files:
             print(f"Loaded data from {json_file}")
 
         elif "sorted_by_leafs" in os.path.basename(json_file):
-            with open(json_file, 'r') as f:
-                data = json.load(f)[1:]
-                all_data.extend(data)
-
+            data = json.load(f)[1:]
+            all_data.extend(data)
+            print(f"Loaded data from {json_file}")
 sorted_data = sorted(all_data, key=lambda x: x.get('number_of_leafs', 0))
+sorted_data = [x for x in sorted_data if x["initial_crossings"] != 0]
+
 step = int(len(sorted_data)/number_of_groups)
 sorted_matrix = []
 if step == 0:
@@ -210,3 +211,10 @@ else:
     link_group_names = []
     for dataset in sorted_for_graphs:link_group_names.append(round(dataset[int(len(dataset)/2)]["number_of_links"]))
     make_graphs("links", link_group_names)
+
+    # sorted_data = sorted(all_data, key=lambda x: x.get('gurobi_crossings', 0))
+    # sorted_for_graphs = []
+    # for i in range(number_of_groups):sorted_for_graphs.append(sorted_data[i*step:(i+1)*step])
+    # crossing_group_names = []
+    # for dataset in sorted_for_graphs:crossing_group_names.append(round(dataset[int(len(dataset)/2)]["gurobi_crossings"]))
+    # make_graphs("gurobi_crossings", crossing_group_names)
