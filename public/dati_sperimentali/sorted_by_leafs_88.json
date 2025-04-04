@@ -1,0 +1,292 @@
+[
+  {
+    "media_initial_crossings": 1183.25,
+    "media_heuristic_time": 2443.64,
+    "media_heuristic_crossings": 951.54,
+    "media_gurobi_time": 47057.61,
+    "media_gurobi_crossings": 788.14,
+    "media_number_of_leafs": 87.96,
+    "media_number_internal_nodes": 116.54,
+    "media_number_of_links": 69.25
+  },
+  {
+    "initial_crossings": 394,
+    "heuristic_time": 1079,
+    "heuristic_crossings": 266,
+    "gurobi_time": 21614,
+    "gurobi_crossings": 196,
+    "number_of_leafs": 78,
+    "number_internal_nodes": 106,
+    "number_of_links": 43
+  },
+  {
+    "initial_crossings": 466,
+    "heuristic_time": 2872,
+    "heuristic_crossings": 245,
+    "gurobi_time": 22529,
+    "gurobi_crossings": 148,
+    "number_of_leafs": 79,
+    "number_internal_nodes": 103,
+    "number_of_links": 40
+  },
+  {
+    "initial_crossings": 348,
+    "heuristic_time": 208,
+    "heuristic_crossings": 337,
+    "gurobi_time": 24968,
+    "gurobi_crossings": 208,
+    "number_of_leafs": 79,
+    "number_internal_nodes": 106,
+    "number_of_links": 40
+  },
+  {
+    "initial_crossings": 1178,
+    "heuristic_time": 18,
+    "heuristic_crossings": 863,
+    "gurobi_time": 30441,
+    "gurobi_crossings": 676,
+    "number_of_leafs": 80,
+    "number_internal_nodes": 104,
+    "number_of_links": 68
+  },
+  {
+    "initial_crossings": 1466,
+    "heuristic_time": 252,
+    "heuristic_crossings": 1234,
+    "gurobi_time": 28882,
+    "gurobi_crossings": 1030,
+    "number_of_leafs": 82,
+    "number_internal_nodes": 109,
+    "number_of_links": 82
+  },
+  {
+    "initial_crossings": 1204,
+    "heuristic_time": 883,
+    "heuristic_crossings": 863,
+    "gurobi_time": 30534,
+    "gurobi_crossings": 692,
+    "number_of_leafs": 83,
+    "number_internal_nodes": 113,
+    "number_of_links": 71
+  },
+  {
+    "initial_crossings": 1534,
+    "heuristic_time": 3206,
+    "heuristic_crossings": 1243,
+    "gurobi_time": 51870,
+    "gurobi_crossings": 1084,
+    "number_of_leafs": 83,
+    "number_internal_nodes": 110,
+    "number_of_links": 83
+  },
+  {
+    "initial_crossings": 365,
+    "heuristic_time": 434,
+    "heuristic_crossings": 263,
+    "gurobi_time": 27924,
+    "gurobi_crossings": 199,
+    "number_of_leafs": 83,
+    "number_internal_nodes": 110,
+    "number_of_links": 42
+  },
+  {
+    "initial_crossings": 466,
+    "heuristic_time": 158,
+    "heuristic_crossings": 347,
+    "gurobi_time": 37541,
+    "gurobi_crossings": 250,
+    "number_of_leafs": 83,
+    "number_internal_nodes": 110,
+    "number_of_links": 46
+  },
+  {
+    "initial_crossings": 1305,
+    "heuristic_time": 1302,
+    "heuristic_crossings": 1002,
+    "gurobi_time": 46006,
+    "gurobi_crossings": 836,
+    "number_of_leafs": 85,
+    "number_internal_nodes": 112,
+    "number_of_links": 73
+  },
+  {
+    "initial_crossings": 395,
+    "heuristic_time": 3194,
+    "heuristic_crossings": 314,
+    "gurobi_time": 32221,
+    "gurobi_crossings": 241,
+    "number_of_leafs": 86,
+    "number_internal_nodes": 115,
+    "number_of_links": 43
+  },
+  {
+    "initial_crossings": 1725,
+    "heuristic_time": 2933,
+    "heuristic_crossings": 1448,
+    "gurobi_time": 37660,
+    "gurobi_crossings": 1302,
+    "number_of_leafs": 86,
+    "number_internal_nodes": 115,
+    "number_of_links": 86
+  },
+  {
+    "initial_crossings": 1835,
+    "heuristic_time": 774,
+    "heuristic_crossings": 1442,
+    "gurobi_time": 36230,
+    "gurobi_crossings": 1216,
+    "number_of_leafs": 87,
+    "number_internal_nodes": 116,
+    "number_of_links": 87
+  },
+  {
+    "initial_crossings": 1817,
+    "heuristic_time": 1155,
+    "heuristic_crossings": 1550,
+    "gurobi_time": 41906,
+    "gurobi_crossings": 1361,
+    "number_of_leafs": 88,
+    "number_internal_nodes": 118,
+    "number_of_links": 88
+  },
+  {
+    "initial_crossings": 1828,
+    "heuristic_time": 2912,
+    "heuristic_crossings": 1440,
+    "gurobi_time": 37345,
+    "gurobi_crossings": 1220,
+    "number_of_leafs": 88,
+    "number_internal_nodes": 117,
+    "number_of_links": 88
+  },
+  {
+    "initial_crossings": 327,
+    "heuristic_time": 2275,
+    "heuristic_crossings": 238,
+    "gurobi_time": 87768,
+    "gurobi_crossings": 209,
+    "number_of_leafs": 88,
+    "number_internal_nodes": 115,
+    "number_of_links": 44
+  },
+  {
+    "initial_crossings": 1837,
+    "heuristic_time": 4272,
+    "heuristic_crossings": 1392,
+    "gurobi_time": 54146,
+    "gurobi_crossings": 1213,
+    "number_of_leafs": 90,
+    "number_internal_nodes": 119,
+    "number_of_links": 90
+  },
+  {
+    "initial_crossings": 399,
+    "heuristic_time": 913,
+    "heuristic_crossings": 303,
+    "gurobi_time": 45079,
+    "gurobi_crossings": 205,
+    "number_of_leafs": 90,
+    "number_internal_nodes": 119,
+    "number_of_links": 45
+  },
+  {
+    "initial_crossings": 1779,
+    "heuristic_time": 5092,
+    "heuristic_crossings": 1497,
+    "gurobi_time": 43549,
+    "gurobi_crossings": 1251,
+    "number_of_leafs": 91,
+    "number_internal_nodes": 124,
+    "number_of_links": 91
+  },
+  {
+    "initial_crossings": 1791,
+    "heuristic_time": 122,
+    "heuristic_crossings": 1575,
+    "gurobi_time": 45532,
+    "gurobi_crossings": 1314,
+    "number_of_leafs": 92,
+    "number_internal_nodes": 119,
+    "number_of_links": 92
+  },
+  {
+    "initial_crossings": 2007,
+    "heuristic_time": 943,
+    "heuristic_crossings": 1736,
+    "gurobi_time": 99546,
+    "gurobi_crossings": 1464,
+    "number_of_leafs": 94,
+    "number_internal_nodes": 124,
+    "number_of_links": 94
+  },
+  {
+    "initial_crossings": 2121,
+    "heuristic_time": 6619,
+    "heuristic_crossings": 1571,
+    "gurobi_time": 77658,
+    "gurobi_crossings": 1361,
+    "number_of_leafs": 94,
+    "number_internal_nodes": 124,
+    "number_of_links": 94
+  },
+  {
+    "initial_crossings": 538,
+    "heuristic_time": 764,
+    "heuristic_crossings": 412,
+    "gurobi_time": 48385,
+    "gurobi_crossings": 296,
+    "number_of_leafs": 95,
+    "number_internal_nodes": 128,
+    "number_of_links": 48
+  },
+  {
+    "initial_crossings": 475,
+    "heuristic_time": 428,
+    "heuristic_crossings": 387,
+    "gurobi_time": 55599,
+    "gurobi_crossings": 326,
+    "number_of_leafs": 95,
+    "number_internal_nodes": 125,
+    "number_of_links": 48
+  },
+  {
+    "initial_crossings": 1478,
+    "heuristic_time": 2159,
+    "heuristic_crossings": 1193,
+    "gurobi_time": 50550,
+    "gurobi_crossings": 932,
+    "number_of_leafs": 95,
+    "number_internal_nodes": 127,
+    "number_of_links": 81
+  },
+  {
+    "initial_crossings": 2007,
+    "heuristic_time": 16570,
+    "heuristic_crossings": 1724,
+    "gurobi_time": 54905,
+    "gurobi_crossings": 1448,
+    "number_of_leafs": 96,
+    "number_internal_nodes": 127,
+    "number_of_links": 96
+  },
+  {
+    "initial_crossings": 1390,
+    "heuristic_time": 5058,
+    "heuristic_crossings": 1225,
+    "gurobi_time": 96073,
+    "gurobi_crossings": 1015,
+    "number_of_leafs": 96,
+    "number_internal_nodes": 124,
+    "number_of_links": 82
+  },
+  {
+    "initial_crossings": 656,
+    "heuristic_time": 1827,
+    "heuristic_crossings": 533,
+    "gurobi_time": 51152,
+    "gurobi_crossings": 375,
+    "number_of_leafs": 97,
+    "number_internal_nodes": 124,
+    "number_of_links": 54
+  }
+]
