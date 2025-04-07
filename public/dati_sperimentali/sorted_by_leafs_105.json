@@ -1,23 +1,32 @@
 [
   {
-    "media_initial_crossings": 1748.86,
-    "media_heuristic_time": 3902.14,
-    "media_heuristic_crossings": 1361.04,
-    "media_gurobi_time": 82861.57,
-    "media_gurobi_crossings": 1112.93,
+    "media_initial_crossings": 1712.11,
+    "std_initial_crossings": 968.28,
+    "media_heuristic_time": 3793.68,
+    "std_heuristic_time": 4063.69,
+    "media_heuristic_crossings": 1333.11,
+    "std_heuristic_crossings": 743.04,
+    "media_gurobi_time": 82704.0,
+    "std_gurobi_time": 18843.31,
+    "media_gurobi_crossings": 1086.46,
+    "std_gurobi_crossings": 658.65,
     "media_number_of_leafs": 104.68,
-    "media_number_internal_nodes": 139.0,
-    "media_number_of_links": 82.39
+    "std_number_of_leafs": 4.64,
+    "media_number_internal_nodes": 138.75,
+    "std_number_internal_nodes": 6.96,
+    "media_number_of_links": 81.36,
+    "std_number_of_links": 24.07,
+    "ottimalita_euristica": 0.81
   },
   {
-    "initial_crossings": 1685,
-    "heuristic_time": 4864,
-    "heuristic_crossings": 1315,
-    "gurobi_time": 55564,
-    "gurobi_crossings": 1116,
+    "initial_crossings": 656,
+    "heuristic_time": 1827,
+    "heuristic_crossings": 533,
+    "gurobi_time": 51152,
+    "gurobi_crossings": 375,
     "number_of_leafs": 97,
-    "number_internal_nodes": 131,
-    "number_of_links": 83
+    "number_internal_nodes": 124,
+    "number_of_links": 54
   },
   {
     "initial_crossings": 629,

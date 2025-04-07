@@ -24,8 +24,7 @@ with open(json_path, 'r') as file:
 
 # Creazione del modello
 model = Model("Vincoli condizionali")
-model.Params.MemLimit = 12 # 12 GB
-model.Params.NodefileStart = 11 # 11 GB 
+model.Params.MemLimit = 32 # 32 GB
 model.Params.LogToConsole = 1  # Enable logging
 
 

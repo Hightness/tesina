@@ -1,13 +1,22 @@
 [
   {
-    "media_initial_crossings": 9.25,
-    "media_heuristic_time": 24.75,
-    "media_heuristic_crossings": 4.79,
-    "media_gurobi_time": 150.75,
-    "media_gurobi_crossings": 4.61,
+    "media_initial_crossings": 8.71,
+    "std_initial_crossings": 6.48,
+    "media_heuristic_time": 19.5,
+    "std_heuristic_time": 34.74,
+    "media_heuristic_crossings": 4.18,
+    "std_heuristic_crossings": 4.34,
+    "media_gurobi_time": 174.61,
+    "std_gurobi_time": 218.3,
+    "media_gurobi_crossings": 4.0,
+    "std_gurobi_crossings": 4.33,
     "media_number_of_leafs": 8.46,
-    "media_number_internal_nodes": 13.96,
-    "media_number_of_links": 7.96
+    "std_number_of_leafs": 1.82,
+    "media_number_internal_nodes": 13.71,
+    "std_number_internal_nodes": 2.81,
+    "media_number_of_links": 7.75,
+    "std_number_of_links": 2.47,
+    "ottimalita_euristica": 0.96
   },
   {
     "initial_crossings": 2,
@@ -270,23 +279,23 @@
     "number_of_links": 11
   },
   {
-    "initial_crossings": 20,
-    "heuristic_time": 228,
+    "initial_crossings": 21,
+    "heuristic_time": 117,
     "heuristic_crossings": 11,
-    "gurobi_time": 121,
+    "gurobi_time": 122,
     "gurobi_crossings": 11,
     "number_of_leafs": 12,
-    "number_internal_nodes": 19,
+    "number_internal_nodes": 17,
     "number_of_links": 12
   },
   {
-    "initial_crossings": 22,
-    "heuristic_time": 47,
-    "heuristic_crossings": 17,
-    "gurobi_time": 122,
-    "gurobi_crossings": 17,
+    "initial_crossings": 6,
+    "heuristic_time": 11,
+    "heuristic_crossings": 0,
+    "gurobi_time": 789,
+    "gurobi_crossings": 0,
     "number_of_leafs": 12,
-    "number_internal_nodes": 22,
-    "number_of_links": 12
+    "number_internal_nodes": 17,
+    "number_of_links": 6
   }
 ]

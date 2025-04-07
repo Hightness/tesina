@@ -243,6 +243,7 @@ app.post("/run-heuristic", (req, res) => {
                 bestTrees.push({swapped:swapped, rootS: JSON.stringify(bestRootS, null, 2), rootT: JSON.stringify(bestRootT, null, 2), links: link, time: Date.now() - startTime , crossings: best, optimal: false});
             }
             [s_l, t_l] = [t_l, s_l];
+            //ciao
             [rootS, rootT] = [rootT, rootS];
             link = Object.fromEntries(Object.entries(link).map(([k, v]) => [v, k]));
             swapped = !swapped;

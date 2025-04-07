@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import json
 import glob
 import matplotlib.pyplot as plt
@@ -13,7 +14,21 @@ folder_path += "public/dati_sperimentali"
 json_files = glob.glob(os.path.join(folder_path, "*.json"))
 all_data = []
 
-def make_graphs(name, group_names):
+def generate_data(matrix):
+    data = []
+    for i in range(len(matrix)):
+        dati_nuovi = {}
+        for key in matrix[i][1].keys():
+            media = round(np.mean([x[key] for x in matrix[i]]), 2)
+            dati_nuovi[f"media_{key}"] = media
+            dati_nuovi[f"std_{key}"] = round(np.std([x[key] for x in matrix[i]]), 2)
+        dati_nuovi['ottimalita_euristica'] = round(dati_nuovi['media_gurobi_crossings']/dati_nuovi['media_heuristic_crossings'], 2)
+
+        data.append(dati_nuovi)
+    return data
+
+
+def make_graphs(fname, name, group_names, dati_utili):
 
     # Separate data into Gurobi and heuristic results
     gurobi_matrix = []
@@ -22,12 +37,6 @@ def make_graphs(name, group_names):
     for group in sorted_for_graphs:
         gurobi_group = [item for item in group if "gurobi_crossings" in item]
         heuristic_group = [item for item in group if "heuristic_crossings" in item]
-    
-        # If still empty, try to infer from solver_type
-        if not gurobi_group:
-            gurobi_group = [item for item in group if item.get("solver_type") == "gurobi"]
-        if not heuristic_group:
-            heuristic_group = [item for item in group if item.get("solver_type", "") != "gurobi" and item.get("solver_type") is not None]
     
         gurobi_matrix.append(gurobi_group)
         heuristic_matrix.append(heuristic_group)
@@ -54,6 +63,7 @@ def make_graphs(name, group_names):
 
     plt.bar(index, gurobi_crossings_values, bar_width, label='Gurobi Crossings', color='blue', alpha=0.7)
     plt.bar(index + bar_width, heuristic_crossings_values, bar_width, label='Heuristic Crossings', color='green', alpha=0.7)
+
 
     plt.xlabel(f'Number of {name}, ({step} entries per group)')
     plt.ylabel('Average Crossings')
@@ -115,6 +125,14 @@ def make_graphs(name, group_names):
     plt.title(f'Trend of Gurobi vs Heuristic Crossings by {name.capitalize()}')
     plt.xticks(x_positions, group_names)
     plt.legend()
+    sdgc = round(sum(e['std_gurobi_crossings'] for e in dati_utili)/len(dati_utili), 2)
+    sdhc = round(sum(e['std_heuristic_crossings'] for e in dati_utili)/len(dati_utili), 2)
+    sdn = round(sum(e[f'std_{fname}'] for e in dati_utili)/len(dati_utili), 2)
+
+    plt.text(-0.3, 1000, "Comparison of Gurobi vs Heuristic Crossings\n\n\n"
+               f"std deviation gurobi crossings: {sdgc}\n\n"
+               f"std deviation heuristic crossings: {sdhc}\n\n"
+               f"std deviation {name}: {sdn}", fontdict={'size': 12, 'color': 'gray', 'weight': 'normal'})
     plt.grid(True, linestyle='--', alpha=0.7)
     plt.savefig(os.path.join(graphs_dir, f"{name}_sorted_gurobi_vs_heuristic_crossings_line.png"))
     plt.close()
@@ -141,7 +159,6 @@ def make_graphs(name, group_names):
     plt.ylabel('Average Execution Time (s)')
     plt.title(f'Trend of Gurobi vs Heuristic Execution Times by {name.capitalize()}')
     plt.xticks(x_positions, group_names)
-    plt.legend()
     plt.grid(True, linestyle='--', alpha=0.7)
     plt.savefig(os.path.join(graphs_dir, f"{name}_sorted_gurobi_vs_heuristic_times_line.png"))
     plt.close()
@@ -168,7 +185,6 @@ if step == 0:
 else:
     for i in range(number_of_groups-1):sorted_matrix.append(sorted_data[i*step:(i+1)*step])
     sorted_matrix.append(sorted_data[(number_of_groups-1)*step:])
-    sorted_for_graphs = sorted_matrix.copy()
 
     for json_file in json_files:
         if "sorted_by_leafs" in os.path.basename(json_file):os.remove(json_file)
@@ -176,10 +192,13 @@ else:
     for i in range(len(sorted_matrix)):
         dati_nuovi = {}
         for key in sorted_matrix[i][0].keys():
-            dati_nuovi[f"media_{key}"] = round(sum([x[key] for x in sorted_matrix[i]]) / len(sorted_matrix[i]), 2)
-        sorted_matrix[i].insert(0, dati_nuovi)
+            media = round(np.mean([x[key] for x in sorted_matrix[i]]), 2)
+            dati_nuovi[f"media_{key}"] = media
+            dati_nuovi[f"std_{key}"] = round(np.std([x[key] for x in sorted_matrix[i]]), 2)
+        dati_nuovi['ottimalita_euristica'] = round(dati_nuovi['media_gurobi_crossings']/dati_nuovi['media_heuristic_crossings'], 2)
 
-        output_file = os.path.join(folder_path, f"sorted_by_leafs_{round(dati_nuovi["media_number_of_leafs"])}.json")
+        sorted_matrix[i].insert(0, dati_nuovi)
+        output_file = os.path.join(folder_path, f"sorted_by_leafs_{round(sorted_matrix[i][0]["media_number_of_leafs"])}.json")
         with open(output_file, 'w') as f:
             json.dump(sorted_matrix[i], f, indent=2)
 
@@ -193,8 +212,11 @@ else:
 
     # Generate graphs for each group in sorted_for_graphs
     leaf_group_names = []
+    sorted_for_graphs = []
+    for i in range(number_of_groups):sorted_for_graphs.append(sorted_data[i*step:(i+1)*step])
     for dataset in sorted_for_graphs:leaf_group_names.append(round(dataset[int(len(dataset)/2)]["number_of_leafs"]))
-    make_graphs("leafs", leaf_group_names)
+    
+    make_graphs("number_of_leafs", "leafs", leaf_group_names, generate_data(sorted_for_graphs))
 
 
     sorted_data = sorted(all_data, key=lambda x: x.get('number_internal_nodes', 0))
@@ -202,7 +224,7 @@ else:
     for i in range(number_of_groups):sorted_for_graphs.append(sorted_data[i*step:(i+1)*step])
     internal_node_group_names = []
     for dataset in sorted_for_graphs:internal_node_group_names.append(round(dataset[int(len(dataset)/2)]["number_internal_nodes"]))
-    make_graphs("internal_nodes", internal_node_group_names)
+    make_graphs("number_internal_nodes", "internal_nodes", internal_node_group_names, generate_data(sorted_for_graphs))
 
 
     sorted_data = sorted(all_data, key=lambda x: x.get('number_of_links', 0))
@@ -210,7 +232,7 @@ else:
     for i in range(number_of_groups):sorted_for_graphs.append(sorted_data[i*step:(i+1)*step])
     link_group_names = []
     for dataset in sorted_for_graphs:link_group_names.append(round(dataset[int(len(dataset)/2)]["number_of_links"]))
-    make_graphs("links", link_group_names)
+    make_graphs("number_of_links", "links", link_group_names, generate_data(sorted_for_graphs))
 
     # sorted_data = sorted(all_data, key=lambda x: x.get('gurobi_crossings', 0))
     # sorted_for_graphs = []

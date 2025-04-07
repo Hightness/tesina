@@ -1,13 +1,22 @@
 [
   {
-    "media_initial_crossings": 1183.25,
-    "media_heuristic_time": 2443.64,
-    "media_heuristic_crossings": 951.54,
-    "media_gurobi_time": 47057.61,
-    "media_gurobi_crossings": 788.14,
+    "media_initial_crossings": 1220.0,
+    "std_initial_crossings": 637.86,
+    "media_heuristic_time": 2552.11,
+    "std_heuristic_time": 3237.45,
+    "media_heuristic_crossings": 979.46,
+    "std_heuristic_crossings": 538.47,
+    "media_gurobi_time": 47215.18,
+    "std_gurobi_time": 20427.72,
+    "media_gurobi_crossings": 814.61,
+    "std_gurobi_crossings": 476.14,
     "media_number_of_leafs": 87.96,
-    "media_number_internal_nodes": 116.54,
-    "media_number_of_links": 69.25
+    "std_number_of_leafs": 5.8,
+    "media_number_internal_nodes": 116.79,
+    "std_number_internal_nodes": 7.7,
+    "media_number_of_links": 70.29,
+    "std_number_of_links": 20.69,
+    "ottimalita_euristica": 0.83
   },
   {
     "initial_crossings": 394,
@@ -280,13 +289,13 @@
     "number_of_links": 82
   },
   {
-    "initial_crossings": 656,
-    "heuristic_time": 1827,
-    "heuristic_crossings": 533,
-    "gurobi_time": 51152,
-    "gurobi_crossings": 375,
+    "initial_crossings": 1685,
+    "heuristic_time": 4864,
+    "heuristic_crossings": 1315,
+    "gurobi_time": 55564,
+    "gurobi_crossings": 1116,
     "number_of_leafs": 97,
-    "number_internal_nodes": 124,
-    "number_of_links": 54
+    "number_internal_nodes": 131,
+    "number_of_links": 83
   }
 ]

@@ -1,13 +1,22 @@
 [
   {
     "media_initial_crossings": 2929.59,
+    "std_initial_crossings": 1575.61,
     "media_heuristic_time": 7214.41,
+    "std_heuristic_time": 7668.26,
     "media_heuristic_crossings": 2419.56,
+    "std_heuristic_crossings": 1337.95,
     "media_gurobi_time": 211077.71,
+    "std_gurobi_time": 129084.13,
     "media_gurobi_crossings": 2041.76,
+    "std_gurobi_crossings": 1194.58,
     "media_number_of_leafs": 129.44,
+    "std_number_of_leafs": 14.0,
     "media_number_internal_nodes": 169.24,
-    "media_number_of_links": 106.53
+    "std_number_internal_nodes": 17.14,
+    "media_number_of_links": 106.53,
+    "std_number_of_links": 31.8,
+    "ottimalita_euristica": 0.84
   },
   {
     "initial_crossings": 721,
